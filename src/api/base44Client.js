@@ -537,22 +537,71 @@ export const db = {
         listeners.forEach((cb) => cb({ messages: [...target.messages] }));
       }
 
-      // Simulate intelligent AI assistant response after a short realistic latency
-      setTimeout(() => {
-        const replyText = generateAssistantReply(message.content || "");
-        const assistantMsg = {
-          id: `msg-${Date.now() + 1}`,
-          role: "assistant",
-          content: replyText,
-          created_date: new Date().toISOString()
-        };
-        target.messages.push(assistantMsg);
-        writeConversations(convs);
+      // Dispatch to Live Qwen AI with auto-record in app & fallback
+      setTimeout(async () => {
+        // Calculate live financial context
+        const transactions = readEntity(ENTITY_KEYS.Transaction);
+        let totalBalance = 0;
+        let monthlyIncome = 0;
+        let monthlyExpenses = 0;
+        const nowMonth = new Date().toISOString().slice(0, 7);
+        transactions.forEach((tx) => {
+          const amt = Number(tx.amount) || 0;
+          if (tx.type === "income") {
+            totalBalance += amt;
+            if (tx.date && tx.date.startsWith(nowMonth)) monthlyIncome += amt;
+          } else {
+            totalBalance -= amt;
+            if (tx.date && tx.date.startsWith(nowMonth)) monthlyExpenses += amt;
+          }
+        });
 
-        if (listeners) {
-          listeners.forEach((cb) => cb({ messages: [...target.messages] }));
+        try {
+          const { generateAIFinancialReply } = await import("@/api/aiClient");
+          const aiResult = await generateAIFinancialReply({
+            messages: target.messages,
+            financialContext: {
+              totalBalance: totalBalance.toFixed(2),
+              monthlyIncome: monthlyIncome.toFixed(2),
+              monthlyExpenses: monthlyExpenses.toFixed(2),
+            },
+            db
+          });
+
+          const assistantMsg = {
+            id: `msg-${Date.now() + 1}`,
+            role: "assistant",
+            content: aiResult.content,
+            tool_calls: aiResult.tool_calls || [],
+            created_date: new Date().toISOString()
+          };
+          target.messages.push(assistantMsg);
+          writeConversations(convs);
+
+          if (listeners) {
+            listeners.forEach((cb) => cb({ messages: [...target.messages] }));
+          }
+
+          if (aiResult.recordedTransaction && typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("opus_transaction_created", { detail: aiResult.recordedTransaction }));
+          }
+        } catch (aiErr) {
+          console.warn("Live AI error, falling back to local copilot:", aiErr);
+          const replyText = generateAssistantReply(message.content || "");
+          const assistantMsg = {
+            id: `msg-${Date.now() + 1}`,
+            role: "assistant",
+            content: replyText,
+            created_date: new Date().toISOString()
+          };
+          target.messages.push(assistantMsg);
+          writeConversations(convs);
+
+          if (listeners) {
+            listeners.forEach((cb) => cb({ messages: [...target.messages] }));
+          }
         }
-      }, 350);
+      }, 200);
 
       return userMsg;
     },

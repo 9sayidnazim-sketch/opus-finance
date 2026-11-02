@@ -324,3 +324,4 @@ export async function sendFinancialAlert({ type, title, amount, category, number
     text: lines.join("\n"),
   });
 }
+

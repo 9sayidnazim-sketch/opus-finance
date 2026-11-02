@@ -1,7 +1,20 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Zap, CheckCircle2, AlertCircle, Loader2, ChevronRight, Clock } from 'lucide-react';
+import {
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  ChevronRight,
+  Clock,
+  MessageCircle,
+  Check,
+  CreditCard,
+} from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { toast } from 'sonner';
+import { sendWhatsAppMessage } from '@/api/evolutionWhatsApp';
+import { getAIConfig, saveAIConfig } from '@/api/aiClient';
 
 const FunctionDisplay = ({ toolCall }) => {
     const [expanded, setExpanded] = useState(false);
@@ -22,6 +35,38 @@ const FunctionDisplay = ({ toolCall }) => {
         (typeof results === 'string' && /error|failed/i.test(results)) ||
         (parsedResults?.success === false)
     );
+    
+    // Special highlight for recorded transactions
+    if (name === "record_transaction_in_app" && parsedResults?.success) {
+        let args = {};
+        try {
+            args = typeof toolCall.arguments_string === "string" ? JSON.parse(toolCall.arguments_string) : (toolCall.arguments_string || {});
+        } catch {
+            // keep empty
+        }
+
+        const isExpense = args.type !== "income";
+        return (
+            <div className="mt-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50/70 text-xs">
+                <div className="flex items-center justify-between font-medium text-emerald-900 mb-1">
+                    <span className="flex items-center gap-1.5">
+                        <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+                        Recorded in App Database
+                    </span>
+                    <span className={cn(
+                        "font-semibold font-mono",
+                        isExpense ? "text-rose-600" : "text-emerald-700"
+                    )}>
+                        {isExpense ? "-" : "+"}${Number(args.amount || 0).toFixed(2)}
+                    </span>
+                </div>
+                <div className="text-[11px] text-slate-600 flex items-center justify-between">
+                    <span>{args.description || "Transaction"} • <strong className="text-slate-700">{args.category || "General"}</strong></span>
+                    <span className="text-slate-400 font-sans">{args.payment_method || "Card"}</span>
+                </div>
+            </div>
+        );
+    }
     
     const statusConfig = {
         pending: { icon: Clock, color: 'text-slate-400', text: 'Pending' },
@@ -94,19 +139,49 @@ const FunctionDisplay = ({ toolCall }) => {
 
 export default function MessageBubble({ message }) {
     const isUser = message.role === 'user';
+    const [sendingWA, setSendingWA] = useState(false);
+    const [sentWA, setSentWA] = useState(false);
+
+    const handleSendToWhatsApp = async () => {
+        const aiCfg = getAIConfig();
+        let targetPhone = aiCfg.recipientPhone || localStorage.getItem("opus_whatsapp_phone") || "";
+
+        if (!targetPhone) {
+            const entered = window.prompt("Enter your phone number (with country code, e.g. 971501234567 or 5511999999999):");
+            if (!entered || !entered.trim()) return;
+            targetPhone = entered.replace(/\D/g, "");
+            saveAIConfig({ recipientPhone: targetPhone });
+            localStorage.setItem("opus_whatsapp_phone", targetPhone);
+        }
+
+        setSendingWA(true);
+        try {
+            await sendWhatsAppMessage({
+                number: targetPhone,
+                text: `💬 *OPUS Financial Assistant:*\n\n${message.content}\n\n_Sent from OPUS Finance App_`,
+            });
+            setSentWA(true);
+            toast.success("Sent to WhatsApp successfully!");
+            setTimeout(() => setSentWA(false), 3000);
+        } catch (err) {
+            toast.error(err.message || "Failed to send to WhatsApp. Check connection.");
+        } finally {
+            setSendingWA(false);
+        }
+    };
     
     return (
         <div className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}>
             {!isUser && (
-                <div className="h-7 w-7 rounded-lg bg-violet-100 flex items-center justify-center mt-0.5">
-                    <div className="h-3 w-3 rounded-full bg-violet-600" />
+                <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center mt-0.5 flex-shrink-0">
+                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
                 </div>
             )}
             <div className={cn("max-w-[85%]", isUser && "flex flex-col items-end")}>
                 {message.content && (
                     <div className={cn(
-                        "rounded-2xl px-4 py-2.5",
-                        isUser ? "bg-violet-600 text-white" : "bg-white border border-slate-200"
+                        "rounded-2xl px-4 py-2.5 shadow-sm",
+                        isUser ? "bg-emerald-600 text-white" : "bg-white border border-slate-200/80"
                     )}>
                         {isUser ? (
                             <p className="text-sm leading-relaxed">{message.content}</p>
@@ -121,10 +196,31 @@ export default function MessageBubble({ message }) {
                 )}
                 
                 {message.tool_calls?.length > 0 && (
-                    <div className="space-y-1">
+                    <div className="space-y-1 w-full">
                         {message.tool_calls.map((toolCall, idx) => (
                             <FunctionDisplay key={idx} toolCall={toolCall} />
                         ))}
+                    </div>
+                )}
+
+                {!isUser && message.content && (
+                    <div className="flex items-center gap-2 mt-1.5 px-1">
+                        <button
+                            type="button"
+                            onClick={handleSendToWhatsApp}
+                            disabled={sendingWA}
+                            className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-700 transition-colors"
+                            title="Send this response to your WhatsApp"
+                        >
+                            {sendingWA ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
+                            ) : sentWA ? (
+                                <Check className="w-3 h-3 text-emerald-600" />
+                            ) : (
+                                <MessageCircle className="w-3 h-3 text-emerald-600" />
+                            )}
+                            <span>{sentWA ? "Sent to WhatsApp!" : "Send to WhatsApp"}</span>
+                        </button>
                     </div>
                 )}
             </div>

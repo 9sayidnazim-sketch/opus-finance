@@ -2,6 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,20 @@ export default function AssistantPage() {
       setMessages(selectedConversation.messages || []);
     }
   }, [selectedConversation]);
+
+  useEffect(() => {
+    const handleTxCreated = (e) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      const tx = e.detail;
+      if (tx) {
+        toast.success(`Transaction saved to app: ${tx.description} (${tx.type === 'income' ? '+' : '-'}$${Number(tx.amount).toFixed(2)})`);
+      }
+    };
+    window.addEventListener("opus_transaction_created", handleTxCreated);
+    return () => window.removeEventListener("opus_transaction_created", handleTxCreated);
+  }, [queryClient]);
 
   useEffect(() => {
     if (!selectedConversation) return;

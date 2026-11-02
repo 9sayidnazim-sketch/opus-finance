@@ -5,16 +5,20 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, CheckCircle, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Bell, CheckCircle, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import NotificationToggle from "../components/settings/NotificationToggle";
 import NotificationThreshold from "../components/settings/NotificationThreshold";
 import WhatsAppConnection from "../components/settings/WhatsAppConnection";
+import { getAIConfig, saveAIConfig, testAIConnection } from "@/api/aiClient";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState(null);
+  const [aiConfig, setAiConfig] = useState(getAIConfig());
 
   const { data: settingsList, isLoading } = useQuery({
     queryKey: ['notification-settings'],
@@ -114,6 +118,81 @@ export default function SettingsPage() {
               }
             }}
           />
+
+          <Card className="shadow-lg border-2 border-violet-200 overflow-hidden">
+            <CardHeader className="border-b bg-gradient-to-r from-violet-50 to-purple-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-violet-600 rounded-lg">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle>AI Copilot & Auto-Record</CardTitle>
+                    <CardDescription>
+                      Alibaba Cloud Model Studio (Qwen) with live WhatsApp integration
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge variant="outline" className="bg-white text-violet-700 border-violet-200">
+                  Model: {aiConfig.model}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <NotificationToggle
+                label="Auto-Record Transactions in App"
+                description="Automatically parse and log transactions when you tell the AI (e.g. 'spent $45 on groceries')"
+                enabled={aiConfig.autoRecordTransactions}
+                onChange={(val) => {
+                  const updated = saveAIConfig({ autoRecordTransactions: val });
+                  setAiConfig(updated);
+                  toast.success(`Auto-record ${val ? "enabled" : "disabled"}`);
+                }}
+              />
+
+              <NotificationToggle
+                label="Auto-Send WhatsApp Receipt"
+                description="Automatically dispatch a WhatsApp notification receipt whenever a transaction is recorded"
+                enabled={aiConfig.autoSendWhatsAppReceipt}
+                onChange={(val) => {
+                  const updated = saveAIConfig({ autoSendWhatsAppReceipt: val });
+                  setAiConfig(updated);
+                  toast.success(`WhatsApp receipt auto-dispatch ${val ? "enabled" : "disabled"}`);
+                }}
+              />
+
+              <div className="pt-2">
+                <label className="text-xs font-medium text-slate-700 mb-1.5 block">
+                  Your WhatsApp Phone Number (with Country Code)
+                </label>
+                <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                  <Input
+                    placeholder="e.g. 971501234567 or 5511999999999"
+                    value={aiConfig.recipientPhone}
+                    onChange={(e) => {
+                      const updated = saveAIConfig({ recipientPhone: e.target.value });
+                      setAiConfig(updated);
+                    }}
+                    className="font-mono max-w-sm"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      const res = await testAIConnection();
+                      if (res.ok) toast.success("AI Gateway connection verified!");
+                      else toast.error("Could not reach AI Gateway: " + (res.error || "error"));
+                    }}
+                  >
+                    Test AI Connection
+                  </Button>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Receipts, budget alerts, and AI insights are sent to this WhatsApp number.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="shadow-lg">
             <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-blue-100">
