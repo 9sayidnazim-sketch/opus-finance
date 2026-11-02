@@ -38,14 +38,25 @@ The codebase has been unarchived, audited, and resolved. All build blockers, mis
    - Adjusted `jsconfig.json` to properly typecheck JSX modules without forcing strict TS checks on untyped libraries.
    - Ran `npm run lint` (0 errors, 0 warnings) and `npm run typecheck` (0 errors).
 
+9. **Evolution GO (whatsmeow) WhatsApp Gateway Integration**:
+   - Integrated the user's self-hosted Evolution GO WhatsApp gateway service (`https://okay-trunk-donation-loans.trycloudflare.com` / `http://localhost:4000`) with Global API Key `429683C4C977415CAAFCCE10F7D57E11`.
+   - Created client service [`src/api/evolutionWhatsApp.js`](file:///Users/ceooctapus/finance/src/api/evolutionWhatsApp.js) with health checks (`/server/ok`), automatic instance provisioning (`opus_finance`), real-time QR code generation (`/instance/qr`), 8-digit phone pairing codes (`/instance/pair`), live connection status polling (`/instance/status`), message delivery (`/send/text`), and disconnect/logout (`/instance/logout`).
+   - Redesigned [`src/components/settings/WhatsAppConnection.jsx`](file:///Users/ceooctapus/finance/src/components/settings/WhatsAppConnection.jsx) with:
+     - Real-time gateway status badge and live WhatsApp connection state.
+     - Interactive QR Code dialog with live rendered base64 QR image and auto-polling until scan confirmation.
+     - Phone pairing code fallback modal.
+     - "Send Test Alert" dialog allowing immediate verification with a real test message to any phone number.
+     - Gateway Settings drawer with live Cloudflare HTTPS vs Local Docker toggle, 1-click API key copying, and direct links to Evolution Web Manager and Swagger documentation.
+   - Connected `db.agents.sendWhatsAppNotification` in [`src/api/base44Client.js`](file:///Users/ceooctapus/finance/src/api/base44Client.js) and linked Assistant page to Settings WhatsApp Hub.
+
 ## Verification & Status
 - `npm run lint`: **Passed (0 errors, 0 warnings)**
 - `npm run typecheck`: **Passed (0 errors)**
 - `npm run build`: **Passed (Vite production bundle built cleanly)**
 - `npm run dev`: **Running locally on `http://127.0.0.1:5173/`**
-- **Stray Error Text Fix**: Removed injected JavaScript snippet from top of `index.html`.
+- **WhatsApp Gateway**: Verified live on `https://okay-trunk-donation-loans.trycloudflare.com` and `http://localhost:4000` with active instance `opus_finance`.
 - **GitHub Repository**: [https://github.com/9sayidnazim-sketch/opus-finance](https://github.com/9sayidnazim-sketch/opus-finance) (branch: `main`)
 - **Live Vercel Production URL**: [https://opus-finance-sigma.vercel.app](https://opus-finance-sigma.vercel.app)
-  - Alternate deployment URL: [https://opus-finance-gk34t0q2f-cldoctapustwo.vercel.app](https://opus-finance-gk34t0q2f-cldoctapustwo.vercel.app)
+  - Alternate deployment URL: [https://opus-finance-dbkdslbbu-cldoctapustwo.vercel.app](https://opus-finance-dbkdslbbu-cldoctapustwo.vercel.app)
   - Verified HTTP 200 with SPA rewrites for deep paths (`/dashboard`, `/transactions`, `/bills`).
 

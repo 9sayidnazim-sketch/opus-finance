@@ -559,6 +559,15 @@ export const db = {
     getWhatsAppConnectURL(agentName = "assistente_financeiro") {
       const text = encodeURIComponent("Hi! I'd like to manage my finances with OPUS Assistant.");
       return `https://wa.me/?text=${text}`;
+    },
+    async sendWhatsAppNotification({ number, text }) {
+      try {
+        const { sendWhatsAppMessage } = await import("@/api/evolutionWhatsApp");
+        return await sendWhatsAppMessage({ number, text });
+      } catch (e) {
+        console.warn("Could not send WhatsApp notification:", e);
+        return { error: e.message };
+      }
     }
   },
   appLogs: {

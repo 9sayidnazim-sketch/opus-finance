@@ -1,6 +1,7 @@
 const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
 
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,8 +87,6 @@ export default function AssistantPage() {
     });
   };
 
-  const whatsappURL = db.agents.getWhatsAppConnectURL('assistente_financeiro');
-
   return (
     <div className="p-4 md:p-8 h-screen flex flex-col">
       <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
@@ -110,12 +109,12 @@ export default function AssistantPage() {
                   </p>
                 </div>
               </div>
-              <a href={whatsappURL} target="_blank" rel="noopener noreferrer">
-                <Button className="bg-violet-600 hover:bg-violet-700">
+              <Link to="/settings">
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Connect WhatsApp
                 </Button>
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>
