@@ -38,10 +38,14 @@ The codebase has been unarchived, audited, and resolved. All build blockers, mis
    - Adjusted `jsconfig.json` to properly typecheck JSX modules without forcing strict TS checks on untyped libraries.
    - Ran `npm run lint` (0 errors, 0 warnings) and `npm run typecheck` (0 errors).
 
-## Verification
+## Verification & Status
 - `npm run lint`: **Passed (0 errors, 0 warnings)**
 - `npm run typecheck`: **Passed (0 errors)**
-- `npm run build`: **Passed (Vite production bundle built successfully in 2.5s)**
-- `npm run dev`: **Running on `http://127.0.0.1:5173/`**
-- Git repository initialized and all changes committed (`main`).
+- `npm run build`: **Passed (Vite production bundle built cleanly)**
+- `npm run dev`: **Running locally on `http://127.0.0.1:5173/`**
+- **Stray Error Text Fix**: Removed injected JavaScript snippet from top of `index.html`.
+- **GitHub Repository**: [https://github.com/9sayidnazim-sketch/opus-finance](https://github.com/9sayidnazim-sketch/opus-finance) (branch: `main`)
+- **Live Vercel Production URL**: [https://opus-finance-sigma.vercel.app](https://opus-finance-sigma.vercel.app)
+  - Alternate deployment URL: [https://opus-finance-gk34t0q2f-cldoctapustwo.vercel.app](https://opus-finance-gk34t0q2f-cldoctapustwo.vercel.app)
+  - Verified HTTP 200 with SPA rewrites for deep paths (`/dashboard`, `/transactions`, `/bills`).
 
