@@ -44,3 +44,4 @@ The codebase has been unarchived, audited, and resolved. All build blockers, mis
 - `npm run build`: **Passed (Vite production bundle built successfully in 2.5s)**
 - `npm run dev`: **Running on `http://127.0.0.1:5173/`**
 - Git repository initialized and all changes committed (`main`).
+
