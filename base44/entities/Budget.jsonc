@@ -1,0 +1,45 @@
+{
+  "name": "Budget",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "alimentacao",
+        "transporte",
+        "moradia",
+        "contas",
+        "saude",
+        "educacao",
+        "lazer",
+        "compras",
+        "outros_gastos"
+      ],
+      "description": "Categoria do or\u00e7amento"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Valor limite do or\u00e7amento mensal"
+    },
+    "month": {
+      "type": "string",
+      "format": "date",
+      "description": "M\u00eas de refer\u00eancia (YYYY-MM-01)"
+    },
+    "alert_threshold": {
+      "type": "number",
+      "default": 80,
+      "description": "Porcentagem para alertar (ex: 80 = alerta aos 80%)"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o or\u00e7amento est\u00e1 ativo"
+    }
+  },
+  "required": [
+    "category",
+    "amount",
+    "month"
+  ]
+}

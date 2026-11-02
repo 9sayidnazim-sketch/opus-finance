@@ -1,0 +1,96 @@
+{
+  "name": "NotificationSettings",
+  "type": "object",
+  "properties": {
+    "budget_alerts_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Alertas quando or\u00e7amento atingir o limite configurado"
+    },
+    "budget_alert_threshold": {
+      "type": "number",
+      "default": 80,
+      "description": "Porcentagem para alertar sobre or\u00e7amentos (padr\u00e3o 80%)"
+    },
+    "goal_deadline_alerts_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Alertas de metas pr\u00f3ximas do vencimento"
+    },
+    "goal_deadline_days": {
+      "type": "number",
+      "default": 7,
+      "description": "Alertar quando faltar X dias para a data alvo da meta"
+    },
+    "large_transaction_alerts_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Alertas para transa\u00e7\u00f5es grandes"
+    },
+    "large_transaction_threshold": {
+      "type": "number",
+      "default": 500,
+      "description": "Valor m\u00ednimo (R$) para considerar transa\u00e7\u00e3o grande"
+    },
+    "bill_due_alerts_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Alertas de contas a vencer"
+    },
+    "bill_due_days_before": {
+      "type": "number",
+      "default": 2,
+      "description": "Alertar X dias antes do vencimento"
+    },
+    "bill_due_day_alert": {
+      "type": "boolean",
+      "default": true,
+      "description": "Alertar no dia do vencimento"
+    },
+    "weekly_summary_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enviar resumo financeiro semanal"
+    },
+    "weekly_summary_day": {
+      "type": "string",
+      "enum": [
+        "segunda",
+        "terca",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sabado",
+        "domingo"
+      ],
+      "default": "domingo",
+      "description": "Dia da semana para enviar resumo semanal"
+    },
+    "monthly_summary_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enviar resumo financeiro mensal"
+    },
+    "monthly_summary_day": {
+      "type": "number",
+      "default": 1,
+      "description": "Dia do m\u00eas para enviar resumo (1-28)"
+    },
+    "whatsapp_connected": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o WhatsApp est\u00e1 conectado"
+    },
+    "notifications_channel": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "email",
+        "ambos"
+      ],
+      "default": "whatsapp",
+      "description": "Canal preferido para notifica\u00e7\u00f5es"
+    }
+  },
+  "required": []
+}
