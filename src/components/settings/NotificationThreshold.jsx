@@ -12,12 +12,12 @@ export default function NotificationThreshold({
   suffix = ""
 }) {
   return (
-    <div className="pl-12 space-y-3">
+    <div className="pl-4 sm:pl-8 space-y-2.5 p-3 rounded-xl bg-white/[0.015] border border-white/[0.03]">
       <div className="flex items-baseline justify-between">
-        <Label className="text-sm font-medium text-slate-700">
+        <Label className="text-xs font-semibold text-zinc-300">
           {label}
         </Label>
-        <span className="text-lg font-bold text-emerald-600">
+        <span className="text-sm font-bold text-violet-400 tabular-numbers px-2 py-0.5 rounded-md bg-violet-500/10 border border-violet-500/20">
           {value}{suffix}
         </span>
       </div>
@@ -28,11 +28,11 @@ export default function NotificationThreshold({
         min={min}
         max={max}
         step={step}
-        className="w-full"
+        className="w-full py-1"
       />
       
       {description && (
-        <p className="text-xs text-slate-500">
+        <p className="text-[11px] text-zinc-400">
           {description}
         </p>
       )}

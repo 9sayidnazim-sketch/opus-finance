@@ -1,16 +1,68 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --font-heading: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
-    --font-body: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
-    --font-display: "SF Pro Rounded", ui-rounded, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  :root,
+  .dark {
+    --font-heading: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-    --background: 240 20% 97%;
+    /* Deep Velvet Graphite - Luxury Dark Mode (Linear / Mercury Style) */
+    --background: 240 14% 5%;          /* #0B0C10 */
+    --foreground: 240 10% 98%;         /* #F8FAFC */
+    
+    --card: 240 12% 9%;                /* #12131A */
+    --card-foreground: 240 10% 98%;    /* #F8FAFC */
+    
+    --popover: 240 12% 8%;             /* #101118 */
+    --popover-foreground: 240 10% 98%; /* #F8FAFC */
+    
+    --primary: 262 88% 66%;            /* #8B5CF6 */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 10% 12%;          /* #191B24 */
+    --secondary-foreground: 240 10% 95%;
+    
+    --muted: 240 10% 12%;              /* #181A24 */
+    --muted-foreground: 240 8% 65%;    /* #94A3B8 */
+    
+    --accent: 262 50% 17%;             /* #221B38 */
+    --accent-foreground: 262 90% 92%;  /* #EDE9FE */
+    
+    --destructive: 350 89% 60%;        /* #F43F5E */
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 240 10% 16%;             /* #1F2230 */
+    --input: 240 10% 16%;              /* #1F2230 */
+    --ring: 262 88% 66%;
+    
+    --radius: 1rem;
+    
+    /* Luxury Financial Charts */
+    --chart-1: 262 88% 66%; /* Electric Violet */
+    --chart-2: 160 84% 42%; /* Emerald Income */
+    --chart-3: 199 89% 52%; /* Cyan */
+    --chart-4: 38 92% 50%;  /* Amber */
+    --chart-5: 350 89% 60%; /* Rose */
+    
+    /* Sidebar Tokens */
+    --sidebar-background: 240 16% 4%;     /* #090A0E */
+    --sidebar-foreground: 240 8% 70%;     /* #94A3B8 */
+    --sidebar-primary: 262 88% 66%;       /* #8B5CF6 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 10%;        /* #151620 */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 10% 12%;        /* #171822 */
+    --sidebar-ring: 262 88% 66%;
+  }
+
+  .light {
+    --background: 240 20% 98%;
     --foreground: 240 10% 8%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 8%;
@@ -29,74 +81,77 @@
     --border: 240 8% 91%;
     --input: 240 8% 91%;
     --ring: 262 83% 58%;
-    --radius: 0.875rem;
-    --chart-1: 262 83% 58%;
-    --chart-2: 224 76% 57%;
-    --chart-3: 172 66% 45%;
-    --chart-4: 43 96% 56%;
-    --chart-5: 340 82% 60%;
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 8% 20%;
-    --sidebar-primary: 262 83% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 262 100% 97%;
-    --sidebar-accent-foreground: 262 65% 40%;
     --sidebar-border: 240 8% 92%;
-    --sidebar-ring: 262 83% 58%;
-  }
-
-  .dark {
-    --background: 240 10% 7%;
-    --foreground: 240 10% 97%;
-    --card: 240 8% 11%;
-    --card-foreground: 240 10% 97%;
-    --popover: 240 8% 11%;
-    --popover-foreground: 240 10% 97%;
-    --primary: 262 88% 68%;
-    --primary-foreground: 240 10% 8%;
-    --secondary: 240 6% 17%;
-    --secondary-foreground: 240 10% 97%;
-    --muted: 240 6% 17%;
-    --muted-foreground: 240 6% 65%;
-    --accent: 262 40% 22%;
-    --accent-foreground: 262 90% 88%;
-    --destructive: 356 70% 48%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 5% 20%;
-    --input: 240 5% 20%;
-    --ring: 262 88% 68%;
-    --chart-1: 262 88% 68%;
-    --chart-2: 224 80% 66%;
-    --chart-3: 172 60% 52%;
-    --chart-4: 43 90% 62%;
-    --chart-5: 340 80% 66%;
-    --sidebar-background: 240 8% 10%;
-    --sidebar-foreground: 240 8% 92%;
-    --sidebar-primary: 262 88% 68%;
-    --sidebar-primary-foreground: 240 10% 8%;
-    --sidebar-accent: 262 40% 20%;
-    --sidebar-accent-foreground: 262 90% 88%;
-    --sidebar-border: 240 6% 18%;
-    --sidebar-ring: 262 88% 68%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/40;
   }
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    color-scheme: dark;
   }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
-    letter-spacing: -0.011em;
+    letter-spacing: -0.015em;
+    min-height: 100vh;
   }
-  h1, h2, h3, h4 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    letter-spacing: -0.022em;
+    letter-spacing: -0.03em;
   }
+}
+
+/* Luxury Fintech Custom Utilities */
+.luxury-card {
+  background: linear-gradient(180deg, rgba(22, 24, 34, 0.85) 0%, rgba(14, 15, 22, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.luxury-card:hover {
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 12px 40px -10px rgba(139, 92, 246, 0.15), 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.glow-violet-subtle {
+  box-shadow: 0 0 50px -15px rgba(139, 92, 246, 0.25);
+}
+
+.glow-emerald-subtle {
+  box-shadow: 0 0 50px -15px rgba(16, 185, 129, 0.2);
+}
+
+.glow-rose-subtle {
+  box-shadow: 0 0 50px -15px rgba(244, 63, 94, 0.2);
+}
+
+.tabular-numbers {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Custom Sleek Dark Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
 }

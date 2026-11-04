@@ -118,70 +118,92 @@ export default function BillsPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-heading text-[32px] leading-tight font-semibold tracking-[-0.03em] text-foreground">Bills</h1>
-            <p className="text-slate-500 mt-1">Manage your payments and due dates</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/25 uppercase tracking-wider">
+                Accounts Payable
+              </span>
+              <span className="text-xs text-zinc-400">• {stats.total} scheduled</span>
+            </div>
+            <h1 className="font-heading text-[30px] sm:text-[34px] leading-tight font-bold tracking-[-0.03em] text-white">
+              Bills & Scheduled Payments
+            </h1>
+            <p className="text-zinc-400 text-sm">
+              Keep track of recurring obligations, upcoming due dates, and paid invoices.
+            </p>
           </div>
           <Button
             onClick={() => {
               setEditingBill(null);
               setShowForm(!showForm);
             }}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-violet-600 hover:bg-violet-500 shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] text-white font-semibold rounded-xl text-xs px-4 h-10 transition-all hover:scale-[1.02]"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-4 h-4 mr-2" />
             New Bill
           </Button>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="rounded-2xl bg-[#12131A]/90 border border-white/[0.08] p-5 backdrop-blur-xl relative overflow-hidden group hover:border-violet-500/30 transition-all">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Pending</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Pending Bills</p>
+                <p className="text-2xl font-bold text-white mt-1 tabular-numbers">
                   {stats.total}
                 </p>
               </div>
-              <Receipt className="w-10 h-10 text-blue-500 opacity-20" />
+              <div className="w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-violet-400">
+                <Receipt className="w-5 h-5" />
+              </div>
             </div>
+            <p className="text-[11px] text-zinc-500 mt-2">Awaiting payment</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+          <div className="rounded-2xl bg-[#12131A]/90 border border-white/[0.08] p-5 backdrop-blur-xl relative overflow-hidden group hover:border-rose-500/40 transition-all">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Overdue</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Overdue</p>
+                <p className="text-2xl font-bold text-rose-400 mt-1 tabular-numbers">
                   {stats.overdue}
                 </p>
               </div>
-              <AlertCircle className="w-10 h-10 text-red-500 opacity-20" />
+              <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center text-rose-400">
+                <AlertCircle className="w-5 h-5" />
+              </div>
             </div>
+            <p className="text-[11px] text-zinc-500 mt-2">Requires immediate attention</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+          <div className="rounded-2xl bg-[#12131A]/90 border border-white/[0.08] p-5 backdrop-blur-xl relative overflow-hidden group hover:border-amber-500/40 transition-all">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Next 7 Days</p>
-                <p className="text-2xl font-bold text-orange-600 mt-1">
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Next 7 Days</p>
+                <p className="text-2xl font-bold text-amber-400 mt-1 tabular-numbers">
                   {stats.upcoming}
                 </p>
               </div>
-              <AlertCircle className="w-10 h-10 text-orange-500 opacity-20" />
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-400">
+                <Clock className="w-5 h-5" />
+              </div>
             </div>
+            <p className="text-[11px] text-zinc-500 mt-2">Due in the upcoming week</p>
           </div>
 
-          <div className="bg-card rounded-2xl shadow-card p-6 border-l-4 border-violet-500">
+          <div className="rounded-2xl bg-[#12131A]/90 border border-white/[0.08] p-5 backdrop-blur-xl relative overflow-hidden group hover:border-emerald-500/40 transition-all">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Amount</p>
-                <p className="text-2xl font-bold text-primary mt-1">
-                  {stats.totalAmount.toFixed(2)}
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Pending Total</p>
+                <p className="text-2xl font-bold text-emerald-400 mt-1 tabular-numbers">
+                  ${stats.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <Receipt className="w-10 h-10 text-violet-500 opacity-20" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+                <Receipt className="w-5 h-5" />
+              </div>
             </div>
+            <p className="text-[11px] text-zinc-500 mt-2">Total committed balance</p>
           </div>
         </div>
 
@@ -200,17 +222,29 @@ export default function BillsPage() {
         </AnimatePresence>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full md:w-auto grid-cols-4 gap-2">
-            <TabsTrigger value="pending" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+          <TabsList className="grid w-full md:w-auto grid-cols-4 gap-2 bg-[#12131A]/90 border border-white/[0.08] p-1.5 rounded-2xl backdrop-blur-xl">
+            <TabsTrigger
+              value="pending"
+              className="rounded-xl text-xs font-semibold data-[state=active]:bg-violet-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_-4px_rgba(139,92,246,0.6)] text-zinc-400 hover:text-white"
+            >
               Pending ({pending.length})
             </TabsTrigger>
-            <TabsTrigger value="overdue" className="data-[state=active]:bg-red-500 data-[state=active]:text-white">
+            <TabsTrigger
+              value="overdue"
+              className="rounded-xl text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_-4px_rgba(244,63,94,0.6)] text-zinc-400 hover:text-white"
+            >
               Overdue ({overdue.length})
             </TabsTrigger>
-            <TabsTrigger value="paid" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
+            <TabsTrigger
+              value="paid"
+              className="rounded-xl text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_-4px_rgba(16,185,129,0.6)] text-zinc-400 hover:text-white"
+            >
               Paid ({paid.length})
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+            <TabsTrigger
+              value="calendar"
+              className="rounded-xl text-xs font-semibold data-[state=active]:bg-white/[0.1] data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-white/20 text-zinc-400 hover:text-white"
+            >
               Calendar
             </TabsTrigger>
           </TabsList>

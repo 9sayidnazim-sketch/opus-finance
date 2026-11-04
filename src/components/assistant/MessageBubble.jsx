@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Check,
   CreditCard,
+  Sparkles
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { toast } from 'sonner';
@@ -47,38 +48,38 @@ const FunctionDisplay = ({ toolCall }) => {
 
         const isExpense = args.type !== "income";
         return (
-            <div className="mt-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50/70 text-xs">
-                <div className="flex items-center justify-between font-medium text-emerald-900 mb-1">
+            <div className="mt-2.5 p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 text-xs shadow-[0_0_24px_-8px_rgba(16,185,129,0.3)] backdrop-blur-xl">
+                <div className="flex items-center justify-between font-semibold text-emerald-300 mb-1">
                     <span className="flex items-center gap-1.5">
-                        <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+                        <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
                         Recorded in App Database
                     </span>
                     <span className={cn(
-                        "font-semibold font-mono",
-                        isExpense ? "text-rose-600" : "text-emerald-700"
+                        "font-bold tabular-numbers text-sm",
+                        isExpense ? "text-rose-400" : "text-emerald-400"
                     )}>
-                        {isExpense ? "-" : "+"}${Number(args.amount || 0).toFixed(2)}
+                        {isExpense ? "-" : "+"}${Number(args.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                 </div>
-                <div className="text-[11px] text-slate-600 flex items-center justify-between">
-                    <span>{args.description || "Transaction"} • <strong className="text-slate-700">{args.category || "General"}</strong></span>
-                    <span className="text-slate-400 font-sans">{args.payment_method || "Card"}</span>
+                <div className="text-[11px] text-zinc-300 flex items-center justify-between pt-1 border-t border-emerald-500/15">
+                    <span>{args.description || "Transaction"} • <strong className="text-white">{args.category || "General"}</strong></span>
+                    <span className="text-zinc-400 uppercase tracking-wider">{args.payment_method || "Card"}</span>
                 </div>
             </div>
         );
     }
     
     const statusConfig = {
-        pending: { icon: Clock, color: 'text-slate-400', text: 'Pending' },
-        running: { icon: Loader2, color: 'text-slate-500', text: 'Running...', spin: true },
-        in_progress: { icon: Loader2, color: 'text-slate-500', text: 'Running...', spin: true },
+        pending: { icon: Clock, color: 'text-zinc-400', text: 'Pending' },
+        running: { icon: Loader2, color: 'text-violet-400', text: 'Processing...', spin: true },
+        in_progress: { icon: Loader2, color: 'text-violet-400', text: 'Processing...', spin: true },
         completed: isError ? 
-            { icon: AlertCircle, color: 'text-red-500', text: 'Failed' } : 
-            { icon: CheckCircle2, color: 'text-green-600', text: 'Success' },
-        success: { icon: CheckCircle2, color: 'text-green-600', text: 'Success' },
-        failed: { icon: AlertCircle, color: 'text-red-500', text: 'Failed' },
-        error: { icon: AlertCircle, color: 'text-red-500', text: 'Failed' }
-    }[status] || { icon: Zap, color: 'text-slate-500', text: '' };
+            { icon: AlertCircle, color: 'text-rose-400', text: 'Failed' } : 
+            { icon: CheckCircle2, color: 'text-emerald-400', text: 'Executed' },
+        success: { icon: CheckCircle2, color: 'text-emerald-400', text: 'Executed' },
+        failed: { icon: AlertCircle, color: 'text-rose-400', text: 'Failed' },
+        error: { icon: AlertCircle, color: 'text-rose-400', text: 'Failed' }
+    }[status] || { icon: Zap, color: 'text-zinc-400', text: '' };
     
     const Icon = statusConfig.icon;
     const formattedName = name.split('.').reverse().join(' ').toLowerCase();
@@ -88,30 +89,29 @@ const FunctionDisplay = ({ toolCall }) => {
             <button
                 onClick={() => setExpanded(!expanded)}
                 className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all",
-                    "hover:bg-slate-50",
-                    expanded ? "bg-slate-50 border-slate-300" : "bg-white border-slate-200"
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-xs font-medium",
+                    expanded ? "bg-white/[0.08] border-white/[0.15] text-white" : "bg-white/[0.03] border-white/[0.06] text-zinc-300 hover:bg-white/[0.06]"
                 )}
             >
                 <Icon className={cn("h-3 w-3", statusConfig.color, statusConfig.spin && "animate-spin")} />
-                <span className="text-slate-700">{formattedName}</span>
+                <span>{formattedName}</span>
                 {statusConfig.text && (
-                    <span className={cn("text-slate-500", isError && "text-red-600")}>
+                    <span className={cn("text-zinc-400", isError && "text-rose-400")}>
                         • {statusConfig.text}
                     </span>
                 )}
                 {!statusConfig.spin && (toolCall.arguments_string || results) && (
-                    <ChevronRight className={cn("h-3 w-3 text-slate-400 transition-transform ml-auto", 
+                    <ChevronRight className={cn("h-3 w-3 text-zinc-500 transition-transform ml-auto", 
                         expanded && "rotate-90")} />
                 )}
             </button>
             
             {expanded && !statusConfig.spin && (
-                <div className="mt-1.5 ml-3 pl-3 border-l-2 border-slate-200 space-y-2">
+                <div className="mt-1.5 ml-3 pl-3 border-l-2 border-white/[0.1] space-y-2">
                     {toolCall.arguments_string && (
                         <div>
-                            <div className="text-xs text-slate-500 mb-1">Parameters:</div>
-                            <pre className="bg-slate-50 rounded-md p-2 text-xs text-slate-600 whitespace-pre-wrap">
+                            <div className="text-[11px] text-zinc-400 mb-1">Parameters:</div>
+                            <pre className="bg-[#0B0C10] rounded-lg p-2.5 text-[11px] text-zinc-300 font-mono border border-white/[0.06] whitespace-pre-wrap">
                                 {(() => {
                                     try {
                                         return JSON.stringify(JSON.parse(toolCall.arguments_string), null, 2);
@@ -119,15 +119,6 @@ const FunctionDisplay = ({ toolCall }) => {
                                         return toolCall.arguments_string;
                                     }
                                 })()}
-                            </pre>
-                        </div>
-                    )}
-                    {parsedResults && (
-                        <div>
-                            <div className="text-xs text-slate-500 mb-1">Result:</div>
-                            <pre className="bg-slate-50 rounded-md p-2 text-xs text-slate-600 whitespace-pre-wrap max-h-48 overflow-auto">
-                                {typeof parsedResults === 'object' ? 
-                                    JSON.stringify(parsedResults, null, 2) : parsedResults}
                             </pre>
                         </div>
                     )}
@@ -173,21 +164,23 @@ export default function MessageBubble({ message }) {
     return (
         <div className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}>
             {!isUser && (
-                <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center mt-0.5 flex-shrink-0">
-                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mt-0.5 flex-shrink-0 shadow-[0_0_15px_-3px_rgba(139,92,246,0.5)] border border-white/20">
+                    <Sparkles className="h-4 w-4 text-white" />
                 </div>
             )}
             <div className={cn("max-w-[85%]", isUser && "flex flex-col items-end")}>
                 {message.content && (
                     <div className={cn(
-                        "rounded-2xl px-4 py-2.5 shadow-sm",
-                        isUser ? "bg-emerald-600 text-white" : "bg-white border border-slate-200/80"
+                        "rounded-2xl px-4 py-3 shadow-md transition-all",
+                        isUser 
+                            ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white border border-violet-400/20 shadow-[0_0_24px_-6px_rgba(139,92,246,0.4)]" 
+                            : "bg-[#181A24]/95 border border-white/[0.1] text-zinc-100 backdrop-blur-xl"
                     )}>
                         {isUser ? (
                             <p className="text-sm leading-relaxed">{message.content}</p>
                         ) : (
                             <ReactMarkdown 
-                                className="text-sm prose prose-sm prose-slate max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                                className="text-sm prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 text-zinc-100"
                             >
                                 {message.content}
                             </ReactMarkdown>
@@ -209,15 +202,15 @@ export default function MessageBubble({ message }) {
                             type="button"
                             onClick={handleSendToWhatsApp}
                             disabled={sendingWA}
-                            className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-700 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-medium transition-all"
                             title="Send this response to your WhatsApp"
                         >
                             {sendingWA ? (
-                                <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
+                                <Loader2 className="w-3 h-3 animate-spin text-emerald-400" />
                             ) : sentWA ? (
-                                <Check className="w-3 h-3 text-emerald-600" />
+                                <Check className="w-3 h-3 text-emerald-400" />
                             ) : (
-                                <MessageCircle className="w-3 h-3 text-emerald-600" />
+                                <MessageCircle className="w-3 h-3 text-emerald-400" />
                             )}
                             <span>{sentWA ? "Sent to WhatsApp!" : "Send to WhatsApp"}</span>
                         </button>

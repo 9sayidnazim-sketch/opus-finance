@@ -1,21 +1,19 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, CheckCircle, Calendar, AlertCircle, Clock } from "lucide-react";
+import { Pencil, Trash2, CheckCircle, Calendar, AlertCircle, Clock, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { format, differenceInDays, isToday, startOfDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 
 const categoryLabels = {
-  alimentacao: "Food",
-  transporte: "Transport",
+  alimentacao: "Food & Dining",
+  transporte: "Transportation",
   moradia: "Housing",
-  contas: "Bills",
-  saude: "Health",
+  contas: "Bills & Utilities",
+  saude: "Healthcare",
   educacao: "Education",
-  lazer: "Leisure",
+  lazer: "Entertainment",
   compras: "Shopping",
-  outros_gastos: "Other"
+  outros_gastos: "General"
 };
 
 export default function BillCard({ bill, onEdit, onDelete, onMarkAsPaid, isOverdue, isPaid }) {
@@ -23,132 +21,133 @@ export default function BillCard({ bill, onEdit, onDelete, onMarkAsPaid, isOverd
   const isDueToday = isToday(new Date(bill.due_date));
   const isDueSoon = daysUntilDue <= 2 && daysUntilDue > 0;
 
-  const getStatusColor = () => {
-    if (isPaid) return "border-green-500 bg-green-50";
-    if (isOverdue) return "border-red-500 bg-red-50";
-    if (isDueToday) return "border-orange-500 bg-orange-50";
-    if (isDueSoon) return "border-yellow-500 bg-yellow-50";
-    return "border-blue-200 bg-white";
+  const getStatusBorder = () => {
+    if (isPaid) return "border-emerald-500/30 hover:border-emerald-500/50";
+    if (isOverdue) return "border-rose-500/40 hover:border-rose-500/60 shadow-[0_0_25px_-8px_rgba(244,63,94,0.3)]";
+    if (isDueToday) return "border-amber-500/40 hover:border-amber-500/60 shadow-[0_0_25px_-8px_rgba(245,158,11,0.3)]";
+    if (isDueSoon) return "border-amber-500/30 hover:border-amber-500/50";
+    return "border-white/[0.08] hover:border-violet-500/30";
   };
 
   const getStatusBadge = () => {
     if (isPaid) {
       return (
-        <Badge className="bg-green-100 text-green-700 border-green-200">
-          <CheckCircle className="w-3 h-3 mr-1" />
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+          <CheckCircle className="w-3 h-3" />
           Paid
-        </Badge>
+        </span>
       );
     }
     if (isOverdue) {
       return (
-        <Badge className="bg-red-100 text-red-700 border-red-200">
-          <AlertCircle className="w-3 h-3 mr-1" />
-          Overdue ({Math.abs(daysUntilDue)} days)
-        </Badge>
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30">
+          <AlertCircle className="w-3 h-3" />
+          Overdue ({Math.abs(daysUntilDue)}d)
+        </span>
       );
     }
     if (isDueToday) {
       return (
-        <Badge className="bg-orange-100 text-orange-700 border-orange-200">
-          <Clock className="w-3 h-3 mr-1" />
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+          <Clock className="w-3 h-3" />
           Due Today
-        </Badge>
+        </span>
       );
     }
     if (isDueSoon) {
       return (
-        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">
-          <AlertCircle className="w-3 h-3 mr-1" />
-          Due in {daysUntilDue} days
-        </Badge>
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+          <Clock className="w-3 h-3" />
+          Due in {daysUntilDue}d
+        </span>
       );
     }
     return (
-      <Badge className="bg-blue-100 text-blue-700 border-blue-200">
-        <Clock className="w-3 h-3 mr-1" />
-        {daysUntilDue} days
-      </Badge>
+      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-300 border border-white/[0.08]">
+        <Clock className="w-3 h-3" />
+        In {daysUntilDue} days
+      </span>
     );
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      exit={{ opacity: 0, scale: 0.98 }}
     >
-      <Card className={`hover:shadow-lg transition-all border-2 ${getStatusColor()}`}>
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg text-slate-900 truncate">
-                {bill.description || categoryLabels[bill.category]}
-              </h3>
-              <p className="text-sm text-slate-500 mt-1">
-                {categoryLabels[bill.category]}
-              </p>
-            </div>
-            <div className="flex gap-1 ml-2">
-              {!isPaid && onMarkAsPaid && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onMarkAsPaid(bill)}
-                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                </Button>
-              )}
+      <div className={`rounded-2xl bg-[#12131A]/90 border p-5 backdrop-blur-xl transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)] ${getStatusBorder()}`}>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-heading font-semibold text-lg text-white tracking-tight truncate">
+              {bill.description || categoryLabels[bill.category] || bill.category}
+            </h3>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              {categoryLabels[bill.category] || bill.category}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 ml-2">
+            {!isPaid && onMarkAsPaid && (
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onEdit(bill)}
+                onClick={() => onMarkAsPaid(bill)}
+                className="h-8 w-8 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/15 rounded-lg border border-emerald-500/20"
+                title="Mark as paid"
               >
-                <Pencil className="w-4 h-4 text-slate-500" />
+                <Check className="w-4 h-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(bill.id)}
-              >
-                <Trash2 className="w-4 h-4 text-red-500" />
-              </Button>
-            </div>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(bill)}
+              className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(bill.id)}
+              className="h-8 w-8 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-3 pt-1">
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold text-white tabular-numbers tracking-tight">
+              ${Number(bill.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            {getStatusBadge()}
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-slate-900">
-                -{bill.amount.toFixed(2)}
-              </span>
-              {getStatusBadge()}
-            </div>
+          <div className="flex items-center gap-2 text-xs text-zinc-400">
+            <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+            <span>
+              Due: {bill.due_date ? format(new Date(bill.due_date), "MMM d, yyyy", { locale: enUS }) : "N/A"}
+            </span>
+          </div>
 
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <Calendar className="w-4 h-4" />
+          {isPaid && bill.paid_date && (
+            <div className="flex items-center gap-2 text-xs text-emerald-300 bg-emerald-950/30 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
               <span>
-                Due: {format(new Date(bill.due_date), "MMM d", { locale: enUS })}
+                Paid on {format(new Date(bill.paid_date), "MMM d, yyyy", { locale: enUS })}
               </span>
             </div>
+          )}
 
-            {isPaid && bill.paid_date && (
-              <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-                <CheckCircle className="w-4 h-4" />
-                <span>
-                  Paid on: {format(new Date(bill.paid_date), "MMM d", { locale: enUS })}
-                </span>
-              </div>
-            )}
-
-            {bill.recurring && (
-              <div className="flex items-center gap-2 text-xs text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg">
-                <span>🔄 Recurring Expense - Day {bill.recurring_day}</span>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          {bill.recurring && (
+            <div className="flex items-center gap-2 text-[11px] font-medium text-violet-300 bg-violet-950/30 border border-violet-500/20 px-2.5 py-1 rounded-xl">
+              <span>Recurring Bill • Day {bill.recurring_day} of each month</span>
+            </div>
+          )}
+        </div>
+      </div>
     </motion.div>
   );
 }

@@ -116,11 +116,19 @@ export default function FamilyPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-heading text-[32px] leading-tight font-semibold tracking-[-0.03em] text-foreground">Family</h1>
-            <p className="text-slate-500 mt-1">
-              Manage members and share financial control
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/25 uppercase tracking-wider">
+                Multi-User Workspace
+              </span>
+              <span className="text-xs text-zinc-400">• {activeMembers.length} active members</span>
+            </div>
+            <h1 className="font-heading text-[30px] sm:text-[34px] leading-tight font-bold tracking-[-0.03em] text-white">
+              Family & Household Workspace
+            </h1>
+            <p className="text-zinc-400 text-sm">
+              Manage member roles, permissions, and shared financial goals.
             </p>
           </div>
           <Button
@@ -128,55 +136,58 @@ export default function FamilyPage() {
               setEditingMember(null);
               setShowForm(!showForm);
             }}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-violet-600 hover:bg-violet-500 shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] text-white font-semibold rounded-xl text-xs px-4 h-10 transition-all hover:scale-[1.02]"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-4 h-4 mr-2" />
             Add Member
           </Button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-l-4 border-blue-500">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Active Members</p>
-                  <p className="text-3xl font-bold text-slate-900 mt-1">
-                    {activeMembers.length}
-                  </p>
-                </div>
-                <Users className="w-12 h-12 text-blue-500 opacity-20" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+          <div className="rounded-2xl bg-[#12131A]/90 border border-white/[0.08] p-5 backdrop-blur-xl relative overflow-hidden group hover:border-violet-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Active Members</p>
+                <p className="text-3xl font-bold text-white mt-1 tabular-numbers">
+                  {activeMembers.length}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-violet-400">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="text-[11px] text-zinc-500 mt-2">Shared workspace access</p>
+          </div>
 
-          <Card className="border-l-4 border-green-500">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Family Balance</p>
-                  <p className="text-3xl font-bold text-green-600 mt-1">
-                    {familyStats.balance.toFixed(2)}
-                  </p>
-                </div>
-                <Wallet className="w-12 h-12 text-green-500 opacity-20" />
+          <div className="rounded-2xl bg-[#12131A]/90 border border-white/[0.08] p-5 backdrop-blur-xl relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Family Net Balance</p>
+                <p className="text-3xl font-bold text-emerald-400 mt-1 tabular-numbers">
+                  ${familyStats.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+                <Wallet className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="text-[11px] text-zinc-500 mt-2">Combined month cashflow</p>
+          </div>
 
-          <Card className="border-l-4 border-purple-500">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Transactions (month)</p>
-                  <p className="text-3xl font-bold text-slate-900 mt-1">
-                    {familyStats.transactionsCount}
-                  </p>
-                </div>
-                <TrendingUp className="w-12 h-12 text-purple-500 opacity-20" />
+          <div className="rounded-2xl bg-[#12131A]/90 border border-white/[0.08] p-5 backdrop-blur-xl relative overflow-hidden group hover:border-cyan-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Monthly Activity</p>
+                <p className="text-3xl font-bold text-cyan-400 mt-1 tabular-numbers">
+                  {familyStats.transactionsCount}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="text-[11px] text-zinc-500 mt-2">Recorded transactions</p>
+          </div>
         </div>
 
         <AnimatePresence>

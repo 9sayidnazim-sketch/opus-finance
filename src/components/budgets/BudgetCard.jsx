@@ -1,124 +1,133 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Pencil, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 const categoryLabels = {
-  alimentacao: "Food",
-  transporte: "Transport",
+  alimentacao: "Food & Dining",
+  transporte: "Transportation",
   moradia: "Housing",
-  contas: "Bills",
-  saude: "Health",
+  contas: "Bills & Utilities",
+  saude: "Healthcare",
   educacao: "Education",
-  lazer: "Leisure",
+  lazer: "Entertainment",
   compras: "Shopping",
-  outros_gastos: "Other Expenses"
+  outros_gastos: "General"
 };
 
 export default function BudgetCard({ budget, onEdit, onDelete }) {
-  const getStatusColor = () => {
-    if (budget.isExceeded) return "text-red-600";
-    if (budget.isWarning) return "text-orange-600";
-    return "text-green-600";
-  };
-
-  const getProgressColor = () => {
-    if (budget.isExceeded) return "bg-red-500";
-    if (budget.isWarning) return "bg-orange-500";
-    return "bg-blue-500";
-  };
+  const isExceeded = budget.isExceeded || budget.percentage > 100;
+  const isWarning = budget.isWarning && !isExceeded;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      exit={{ opacity: 0, scale: 0.98 }}
     >
-      <Card className="hover:shadow-lg transition-shadow relative overflow-hidden">
-        {budget.isExceeded && (
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-5 rounded-full transform translate-x-16 -translate-y-16" />
-        )}
-        {budget.isWarning && !budget.isExceeded && (
-          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500 opacity-5 rounded-full transform translate-x-16 -translate-y-16" />
-        )}
-        
-        <CardContent className="p-6">
+      <div className={`relative overflow-hidden rounded-2xl bg-[#12131A]/90 border p-5 backdrop-blur-xl transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)] ${
+        isExceeded 
+          ? 'border-rose-500/30 hover:border-rose-500/50' 
+          : isWarning
+          ? 'border-amber-500/30 hover:border-amber-500/50'
+          : 'border-white/[0.08] hover:border-violet-500/30'
+      }`}>
+        {/* Subtle Ambient Radial Glow */}
+        <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl pointer-events-none opacity-30 ${
+          isExceeded ? 'bg-rose-500' : isWarning ? 'bg-amber-500' : 'bg-violet-600'
+        }`} />
+
+        <div className="relative z-10">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="font-semibold text-lg text-slate-900">
-                {categoryLabels[budget.category]}
+              <h3 className="font-heading font-semibold text-lg text-white tracking-tight">
+                {categoryLabels[budget.category] || budget.category}
               </h3>
-              {budget.isExceeded ? (
-                <Badge className="mt-1 bg-red-100 text-red-700 border-red-200">
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  Limit Exceeded
-                </Badge>
-              ) : budget.isWarning ? (
-                <Badge className="mt-1 bg-orange-100 text-orange-700 border-orange-200">
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  Warning
-                </Badge>
-              ) : (
-                <Badge className="mt-1 bg-green-100 text-green-700 border-green-200">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  On Track
-                </Badge>
-              )}
+              <div className="mt-1">
+                {isExceeded ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                    <AlertTriangle className="w-3 h-3" />
+                    Limit Exceeded
+                  </span>
+                ) : isWarning ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    <AlertTriangle className="w-3 h-3" />
+                    Near Limit (80%+)
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    <CheckCircle className="w-3 h-3" />
+                    On Track
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex gap-1">
+
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => onEdit(budget)}
+                className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
               >
-                <Pencil className="w-4 h-4 text-slate-500" />
+                <Pencil className="w-3.5 h-3.5" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => onDelete(budget.id)}
+                className="h-8 w-8 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg"
               >
-                <Trash2 className="w-4 h-4 text-red-500" />
+                <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 pt-1">
             <div>
               <div className="flex justify-between items-baseline mb-2">
-                <span className="text-sm text-slate-500">Spent</span>
-                <span className={`text-2xl font-bold ${getStatusColor()}`}>
-                  -{budget.spent.toFixed(2)}
+                <span className="text-xs text-zinc-400">Total Spent</span>
+                <span className={`text-2xl font-bold tabular-numbers tracking-tight ${
+                  isExceeded ? 'text-rose-400' : 'text-white'
+                }`}>
+                  ${Number(budget.spent || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
-              <Progress 
-                value={Math.min(budget.percentage, 100)} 
-                className="h-3"
-                indicatorClassName={getProgressColor()}
-              />
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-xs text-slate-500">
-                  {budget.percentage.toFixed(1)}% of budget
+
+              {/* Progress bar */}
+              <div className="w-full h-2.5 bg-white/[0.06] rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    isExceeded
+                      ? 'bg-gradient-to-r from-rose-500 to-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.6)]'
+                      : isWarning
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-400'
+                      : 'bg-gradient-to-r from-violet-500 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.4)]'
+                  }`}
+                  style={{ width: `${Math.min(budget.percentage || 0, 100)}%` }}
+                />
+              </div>
+
+              <div className="flex justify-between items-center mt-2 text-xs">
+                <span className="text-zinc-500">
+                  {Number(budget.percentage || 0).toFixed(0)}% of limit
                 </span>
-                <span className="text-xs font-medium text-slate-700">
-                  Limit: {budget.amount.toFixed(2)}
+                <span className="font-medium text-zinc-400 tabular-numbers">
+                  Cap: ${Number(budget.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
 
-            <div className="pt-3 border-t flex justify-between items-center">
-              <span className="text-sm text-slate-500">Remaining</span>
-              <span className={`text-lg font-semibold ${
-                budget.remaining < 0 ? 'text-red-600' : 'text-green-600'
+            <div className="pt-3 border-t border-white/[0.06] flex justify-between items-center text-xs">
+              <span className="text-zinc-400">Remaining</span>
+              <span className={`text-sm font-semibold tabular-numbers ${
+                budget.remaining < 0 ? 'text-rose-400' : 'text-emerald-400'
               }`}>
-                {budget.remaining.toFixed(2)}
+                ${Number(budget.remaining || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </motion.div>
   );
 }

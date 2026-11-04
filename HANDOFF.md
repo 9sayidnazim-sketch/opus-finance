@@ -1,7 +1,7 @@
 # HANDOFF - OPUS Personal & Family Finance
 
 ## Summary
-The codebase has been unarchived, audited, and resolved. All build blockers, missing dependencies, routing mismatches, undefined database methods, and linter errors have been systematically fixed. The application is building with zero errors, deployed live to Vercel, and connected end-to-end to both the **Evolution GO WhatsApp Gateway** and **Alibaba Cloud Model Studio (Qwen AI Copilot)** for natural language financial tracking, automatic transaction recording in the app, and instant WhatsApp alerts.
+The codebase has been unarchived, audited, and resolved. All build blockers, missing dependencies, routing mismatches, undefined database methods, and linter errors have been systematically fixed. The application is building with zero errors, deployed live to Vercel, and connected end-to-end to both the **Evolution GO WhatsApp Gateway** and **Alibaba Cloud Model Studio (Qwen AI Copilot)**. The user interface has been completely transformed into a **Modern Luxury Dark Mode (Linear / Mercury Style)** featuring deep velvet graphite surfaces, radiant violet glows, subtle 1px borders, smooth financial tabular typography, and responsive micro-interactions across every page.
 
 ## Issues Identified & Fixed
 
@@ -41,39 +41,48 @@ The codebase has been unarchived, audited, and resolved. All build blockers, mis
 9. **Evolution GO (whatsmeow) WhatsApp Gateway Integration**:
    - Integrated the user's self-hosted Evolution GO WhatsApp gateway service (`https://okay-trunk-donation-loans.trycloudflare.com` / `http://localhost:4000`) with Global API Key `429683C4C977415CAAFCCE10F7D57E11`.
    - Created client service [`src/api/evolutionWhatsApp.js`](file:///Users/ceooctapus/finance/src/api/evolutionWhatsApp.js) with health checks (`/server/ok`), automatic instance provisioning (`opus_finance`), real-time QR code generation (`/instance/qr`), 8-digit phone pairing codes (`/instance/pair`), live connection status polling (`/instance/status`), message delivery (`/send/text`), and disconnect/logout (`/instance/logout`).
-   - Redesigned [`src/components/settings/WhatsAppConnection.jsx`](file:///Users/ceooctapus/finance/src/components/settings/WhatsAppConnection.jsx) with:
-     - Real-time gateway status badge and live WhatsApp connection state.
-     - Interactive QR Code dialog with live rendered base64 QR image and auto-polling until scan confirmation.
-     - Phone pairing code fallback modal.
-     - "Send Test Alert" dialog allowing immediate verification with a real test message to any phone number.
-     - Gateway Settings drawer with live Cloudflare HTTPS vs Local Docker toggle, 1-click API key copying, and direct links to Evolution Web Manager and Swagger documentation.
-   - Connected `db.agents.sendWhatsAppNotification` in [`src/api/base44Client.js`](file:///Users/ceooctapus/finance/src/api/base44Client.js) and linked Assistant page to Settings WhatsApp Hub.
+   - Redesigned [`src/components/settings/WhatsAppConnection.jsx`](file:///Users/ceooctapus/finance/src/components/settings/WhatsAppConnection.jsx) with live status badge, QR Code modal, pairing code modal, test alert sender, and collapsible gateway settings.
 
 10. **Alibaba Cloud Model Studio (Qwen AI Copilot) & Auto-Record Integration**:
     - **API Key Connected**: Configured Alibaba Cloud Model Studio API key (`sk-ws-...`) using international OpenAI-compatible endpoint (`https://dashscope-intl.aliyuncs.com/compatible-mode/v1`) with `qwen-plus`.
     - **AI Client Service ([`src/api/aiClient.js`](file:///Users/ceooctapus/finance/src/api/aiClient.js))**:
       - Manages AI configuration in `localStorage` (`opus_ai_config`) with configurable endpoint, model, auto-record toggle, and WhatsApp auto-receipts.
-      - Supplies real-time financial context (current balance, total monthly income, total monthly expenses, active budget categories, recent transactions) into system prompt.
-      - Detects structured financial intent: `ACTION_RECORD_TRANSACTION: {"type": "expense"|"income", "amount": number, "category": string, "description": string, "payment_method": string}`.
+      - Supplies real-time financial context into system prompt.
       - Automatically creates records in `db.entities.Transaction.create()`, dispatches `opus_transaction_created` window event, and triggers optional WhatsApp receipt.
     - **Assistant UI ([`src/components/assistant/MessageBubble.jsx`](file:///Users/ceooctapus/finance/src/components/assistant/MessageBubble.jsx) & [`src/pages/Assistant.jsx`](file:///Users/ceooctapus/finance/src/pages/Assistant.jsx))**:
       - Displays formatted transaction confirmation card inside AI chat responses showing amount, type, category, and payment method.
-      - Added 1-click **"Send to WhatsApp"** button on AI message bubbles with quick phone entry, recipient memory, and instant dispatch via Evolution GO.
-      - Automatically refreshes React Query caches (`transactions`, `budgets`, `dashboard`) when transactions are recorded by AI.
-    - **Settings AI Hub ([`src/pages/Settings.jsx`](file:///Users/ceooctapus/finance/src/pages/Settings.jsx))**:
-      - Added "AI Copilot & Auto-Record" management card.
-      - Toggles for "Auto-record transactions mentioned in chat" and "Auto-send WhatsApp receipt for recorded transactions".
-      - Recipient WhatsApp phone number configuration.
-      - Real-time "Test AI Connection" diagnostic button verifying DashScope API connectivity.
+      - Added 1-click **"Send to WhatsApp"** button on AI message bubbles.
+
+11. **Modern Luxury Dark Mode Redesign (Linear / Mercury Style)**:
+    - **Global Theme Tokens ([`src/index.css`](file:///Users/ceooctapus/finance/src/index.css) & [`index.html`](file:///Users/ceooctapus/finance/index.html))**:
+      - Set `<html class="dark">` with deep velvet graphite palette (`#0B0C10` background, `#12131A` elevated card surfaces, `#1F2230` 1px borders, `#F8FAFC` high-contrast text).
+      - Added Plus Jakarta Sans + Inter font stack, custom sleek scrollbars, and tabular number figures for financial amounts.
+    - **App Shell & Sidebar ([`src/Layout.jsx`](file:///Users/ceooctapus/finance/src/Layout.jsx))**:
+      - Deep pitch graphite sidebar (`#090A0E`) with radiant violet glowing monogram logo, active indicator pills, and ambient glow aura at the top of the workspace.
+    - **Dashboard Overhaul ([`src/pages/Dashboard.jsx`](file:///Users/ceooctapus/finance/src/pages/Dashboard.jsx))**:
+      - Upgraded StatsCard with luxury variant styling (violet balance, emerald income, rose expenses, cyan transactions) with radial gradient light.
+      - Converted Monthly Trend to an AreaChart with smooth gradient fills and custom dark tooltips.
+      - Transformed Category Expenses into a sleek dark donut chart with center totals and glowing segments.
+      - Luxury dark Recent Transactions list, Budgets Overview, and Goals Overview.
+    - **Transactions ([`src/pages/Transactions.jsx`](file:///Users/ceooctapus/finance/src/pages/Transactions.jsx))**:
+      - Dark luxury transaction rows with glowing income/expense badges, pill filters, and redesigned modal form.
+    - **Budgets ([`src/pages/Budgets.jsx`](file:///Users/ceooctapus/finance/src/pages/Budgets.jsx))**:
+      - High-end dark budget cards with gradient progress indicators (violet on-track, amber warning, rose exceeded) and alerts banner.
+    - **Bills & Scheduled Payments ([`src/pages/Bills.jsx`](file:///Users/ceooctapus/finance/src/pages/Bills.jsx))**:
+      - Dark metric cards for pending, overdue, and upcoming bills, with tab pills and 1-click "Mark as Paid".
+    - **Savings Goals & Family Workspace ([`src/pages/Goals.jsx`](file:///Users/ceooctapus/finance/src/pages/Goals.jsx) & [`src/pages/Family.jsx`](file:///Users/ceooctapus/finance/src/pages/Family.jsx))**:
+      - Dark goal cards with achievement percentage bars and household team cards.
+    - **AI Assistant & Settings ([`src/pages/Assistant.jsx`](file:///Users/ceooctapus/finance/src/pages/Assistant.jsx) & [`src/pages/Settings.jsx`](file:///Users/ceooctapus/finance/src/pages/Settings.jsx))**:
+      - Added floating quick-prompt chips ("Spent $45 on groceries", "Check my budget limits"), glowing WhatsApp send buttons, and dark settings panels.
 
 ## Verification & Status
 - `npm run lint`: **Passed (0 errors, 0 warnings)**
 - `npm run typecheck`: **Passed (0 errors)**
-- `npm run build`: **Passed (Vite production bundle built cleanly)**
+- `npm run build`: **Passed (Vite production bundle built cleanly in ~2.2s)**
 - `npm run dev`: **Running locally on `http://127.0.0.1:5173/`**
 - **WhatsApp Gateway**: Verified live on `https://okay-trunk-donation-loans.trycloudflare.com` and `http://localhost:4000` with active instance `opus_finance`.
 - **AI Gateway**: Verified live on `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` with model `qwen-plus`.
 - **GitHub Repository**: [https://github.com/9sayidnazim-sketch/opus-finance](https://github.com/9sayidnazim-sketch/opus-finance) (branch: `main`)
 - **Live Vercel Production URL**: [https://opus-finance-sigma.vercel.app](https://opus-finance-sigma.vercel.app)
-  - Deployment URL: [https://opus-finance-ejwmpi5gy-cldoctapustwo.vercel.app](https://opus-finance-ejwmpi5gy-cldoctapustwo.vercel.app)
-  - Verified HTTP 200 with SPA rewrites for deep paths (`/dashboard`, `/transactions`, `/assistant`, `/settings`).
+  - Deployment URL: [https://opus-finance-phmtqso7h-cldoctapustwo.vercel.app](https://opus-finance-phmtqso7h-cldoctapustwo.vercel.app)
+  - Verified HTTP 200 with SPA rewrites for deep paths (`/dashboard`, `/transactions`, `/assistant`, `/budgets`, `/bills`, `/goals`, `/family`, `/settings`).

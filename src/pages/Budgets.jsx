@@ -113,11 +113,19 @@ export default function BudgetsPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-heading text-[32px] leading-tight font-semibold tracking-[-0.03em] text-foreground">Budgets</h1>
-            <p className="text-slate-500 mt-1">
-              Set monthly limits by category - {format(new Date(), "MMMM yyyy", { locale: enUS })}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/25 uppercase tracking-wider">
+                Spend Controls
+              </span>
+              <span className="text-xs text-zinc-400">• {format(new Date(), "MMMM yyyy", { locale: enUS })}</span>
+            </div>
+            <h1 className="font-heading text-[30px] sm:text-[34px] leading-tight font-bold tracking-[-0.03em] text-white">
+              Category Budgets
+            </h1>
+            <p className="text-zinc-400 text-sm">
+              Manage category caps, track threshold limits, and stay on budget.
             </p>
           </div>
           <Button
@@ -125,9 +133,9 @@ export default function BudgetsPage() {
               setEditingBudget(null);
               setShowForm(!showForm);
             }}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-violet-600 hover:bg-violet-500 shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] text-white font-semibold rounded-xl text-xs px-4 h-10 transition-all hover:scale-[1.02]"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-4 h-4 mr-2" />
             New Budget
           </Button>
         </div>

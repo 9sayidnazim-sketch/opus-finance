@@ -6,13 +6,19 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircle, Send, Plus, ExternalLink } from "lucide-react";
+import { MessageCircle, Send, Plus, Sparkles, Zap, Bot } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import MessageBubble from "../components/assistant/MessageBubble";
 import ConversationsList from "../components/assistant/ConversationsList";
 import AudioRecorder from "../components/assistant/AudioRecorder";
+
+const PROMPT_SUGGESTIONS = [
+  "Spent $45 on dinner with clients",
+  "How much have I spent on food this month?",
+  "Check my budget limits",
+  "Log $15 coffee with card"
+];
 
 export default function AssistantPage() {
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -31,7 +37,7 @@ export default function AssistantPage() {
     mutationFn: () => db.agents.createConversation({
       agent_name: "assistente_financeiro",
       metadata: {
-        name: `Conversation ${new Date().toLocaleDateString('en-US')}`,
+        name: `Chat • ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
       }
     }),
     onSuccess: (newConv) => {
@@ -40,6 +46,12 @@ export default function AssistantPage() {
       setMessages([]);
     },
   });
+
+  useEffect(() => {
+    if (conversations && conversations.length > 0 && !selectedConversation) {
+      setSelectedConversation(conversations[0]);
+    }
+  }, [conversations, selectedConversation]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -54,7 +66,7 @@ export default function AssistantPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       const tx = e.detail;
       if (tx) {
-        toast.success(`Transaction saved to app: ${tx.description} (${tx.type === 'income' ? '+' : '-'}$${Number(tx.amount).toFixed(2)})`);
+        toast.success(`Transaction recorded: ${tx.description} (${tx.type === 'income' ? '+' : '-'}$${Number(tx.amount).toFixed(2)})`);
       }
     };
     window.addEventListener("opus_transaction_created", handleTxCreated);
@@ -78,15 +90,15 @@ export default function AssistantPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!messageInput.trim() || !selectedConversation) return;
+  const handleSendMessage = async (textToSend) => {
+    const content = (textToSend || messageInput).trim();
+    if (!content || !selectedConversation) return;
 
-    const userMessage = messageInput;
     setMessageInput("");
 
     await db.agents.addMessage(selectedConversation, {
       role: "user",
-      content: userMessage,
+      content,
     });
   };
 
@@ -103,116 +115,154 @@ export default function AssistantPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 h-screen flex flex-col">
+    <div className="p-4 md:p-8 min-h-[calc(100vh-4rem)] flex flex-col">
       <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
-        <div className="mb-6">
-          <h1 className="font-heading text-[32px] leading-tight font-semibold tracking-[-0.03em] text-foreground mb-2">Virtual Assistant</h1>
-          <p className="text-slate-500">
-            Chat with your financial assistant or connect via WhatsApp
-          </p>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/25 text-xs font-semibold uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 text-violet-400" />
+                Qwen AI Copilot
+              </span>
+              <span className="text-xs text-zinc-400">• Natural language financial ledger</span>
+            </div>
+            <h1 className="font-heading text-[30px] sm:text-[34px] leading-tight font-bold tracking-[-0.03em] text-white">
+              AI Financial Assistant
+            </h1>
+            <p className="text-zinc-400 text-sm">
+              Log transactions with natural speech, check your budget status, or send insights straight to WhatsApp.
+            </p>
+          </div>
+
+          <Link to="/settings" className="flex-shrink-0">
+            <Button className="bg-emerald-600/90 hover:bg-emerald-600 text-white rounded-xl text-xs font-semibold px-4 h-10 shadow-[0_0_20px_-4px_rgba(16,185,129,0.5)] border border-emerald-400/30">
+              <MessageCircle className="w-4 h-4 mr-2" />
+              WhatsApp Gateway
+            </Button>
+          </Link>
         </div>
 
-        <Card className="bg-accent border-border mb-6">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <MessageCircle className="w-5 h-5 text-primary" />
+        {/* Chat Workspace */}
+        <div className="grid lg:grid-cols-4 gap-6 flex-1 min-h-[600px] overflow-hidden">
+          {/* Conversation History Sidebar */}
+          <div className="lg:col-span-1 rounded-2xl bg-[#12131A]/90 border border-white/[0.08] p-4 flex flex-col backdrop-blur-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] mb-3">
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">History</span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => createConversationMutation.mutate()}
+                className="h-8 px-2.5 text-xs text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 rounded-lg"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                New Chat
+              </Button>
+            </div>
+            <div className="flex-1 overflow-auto pr-1">
+              <ConversationsList
+                conversations={conversations}
+                selectedId={selectedConversation?.id}
+                onSelect={setSelectedConversation}
+                isLoading={loadingConversations}
+              />
+            </div>
+          </div>
+
+          {/* Main Chat Stream */}
+          <div className="lg:col-span-3 rounded-2xl bg-[#12131A]/90 border border-white/[0.08] flex flex-col backdrop-blur-xl overflow-hidden relative">
+            {/* Ambient Corner Glow */}
+            <div className="absolute top-0 right-0 w-80 h-64 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="p-4 border-b border-white/[0.06] flex items-center justify-between z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-violet-400">
+                  <Bot className="w-4 h-4" />
+                </div>
                 <div>
-                  <p className="font-medium text-slate-900">Connect to WhatsApp</p>
-                  <p className="text-sm text-slate-600">
-                    Record transactions and check your finances straight from WhatsApp
+                  <h2 className="text-sm font-bold text-white tracking-tight">
+                    {selectedConversation ? selectedConversation.metadata?.name || "Financial Copilot" : "Active Session"}
+                  </h2>
+                  <p className="text-[11px] text-emerald-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    DashScope Qwen-Plus • Connected
                   </p>
                 </div>
               </div>
-              <Link to="/settings">
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Connect WhatsApp
-                </Button>
-              </Link>
             </div>
-          </CardContent>
-        </Card>
 
-        <div className="grid lg:grid-cols-4 gap-6 flex-1 overflow-hidden">
-          <div className="lg:col-span-1">
-            <Card className="h-full flex flex-col">
-              <CardHeader className="border-b">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Conversations</CardTitle>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => createConversationMutation.mutate()}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 overflow-auto p-2">
-                <ConversationsList
-                  conversations={conversations}
-                  selectedId={selectedConversation?.id}
-                  onSelect={setSelectedConversation}
-                  isLoading={loadingConversations}
-                />
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="lg:col-span-3">
-            <Card className="h-full flex flex-col">
-              <CardHeader className="border-b">
-                <CardTitle className="text-lg">
-                  {selectedConversation ? selectedConversation.metadata?.name || "Conversation" : "Select a conversation"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col p-4 overflow-hidden">
-                {!selectedConversation ? (
-                  <div className="flex-1 flex items-center justify-center text-center">
-                    <div>
-                      <MessageCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-500 mb-4">
-                        Select a conversation or create a new one to get started
-                      </p>
-                      <Button onClick={() => createConversationMutation.mutate()}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        New Conversation
-                      </Button>
-                    </div>
+            <div className="flex-1 p-4 sm:p-6 overflow-auto space-y-4 z-10">
+              {!selectedConversation || messages.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto py-12">
+                  <div className="w-14 h-14 rounded-2xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-violet-400 mb-4 shadow-[0_0_30px_-5px_rgba(139,92,246,0.4)]">
+                    <Sparkles className="w-7 h-7" />
                   </div>
-                ) : (
-                  <>
-                    <div className="flex-1 overflow-auto mb-4 space-y-4">
-                      {messages.map((message, idx) => (
-                        <MessageBubble key={idx} message={message} />
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
+                  <h3 className="font-heading text-lg font-bold text-white tracking-tight">How can I assist your finances today?</h3>
+                  <p className="text-xs text-zinc-400 mt-1.5 mb-6">
+                    Type or speak in plain language. I will categorize, calculate, and record transactions into your app automatically.
+                  </p>
 
-                    <div className="flex gap-2">
-                      <AudioRecorder 
-                        onAudioRecorded={handleAudioRecorded}
-                        disabled={!selectedConversation}
-                      />
-                      <Input
-                        placeholder="Type your message..."
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                      />
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={!messageInput.trim()}
-                        className="bg-violet-600 hover:bg-violet-700"
+                  <div className="w-full space-y-2 text-left">
+                    <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Try asking:</p>
+                    {PROMPT_SUGGESTIONS.map((suggestion, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSendMessage(suggestion)}
+                        className="w-full p-2.5 text-xs text-zinc-300 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] hover:border-violet-500/30 rounded-xl transition-all flex items-center justify-between group"
                       >
-                        <Send className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                        <span>"{suggestion}"</span>
+                        <Zap className="w-3.5 h-3.5 text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {messages.map((message, idx) => (
+                    <MessageBubble key={idx} message={message} />
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
+
+            {/* Input Footer */}
+            <div className="p-4 border-t border-white/[0.06] bg-[#0E0F16]/90 backdrop-blur-xl z-10">
+              {/* Quick Prompt Chips */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 no-scrollbar">
+                {PROMPT_SUGGESTIONS.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSendMessage(chip)}
+                    className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-zinc-200 border border-white/[0.06] flex-shrink-0 transition-colors"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <AudioRecorder 
+                  onAudioRecorded={handleAudioRecorded}
+                  disabled={!selectedConversation}
+                />
+                <Input
+                  placeholder="Tell your AI assistant (e.g. Spent $30 on taxi with card)..."
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  className="bg-white/[0.04] border-white/[0.1] text-white h-11 rounded-xl focus:border-violet-500 placeholder:text-zinc-500 text-sm"
+                />
+                <Button
+                  onClick={() => handleSendMessage()}
+                  disabled={!messageInput.trim()}
+                  className="bg-violet-600 hover:bg-violet-500 shadow-[0_0_20px_-4px_rgba(139,92,246,0.6)] text-white h-11 px-4 rounded-xl transition-all"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
