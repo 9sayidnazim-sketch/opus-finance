@@ -1,18 +1,36 @@
 import { useMemo } from 'react';
-import { AlertTriangle, Target, ChevronRight } from "lucide-react";
+import { AlertTriangle, Target, ChevronRight, CreditCard, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { differenceInDays, startOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function NotificationsBanner({ 
   budgetsWithSpent, 
   goals, 
-  _transactions,
+  _transactions, 
   settings 
 }) {
+  const { notifications: customerNotifs } = useAuth();
+
   const notifications = useMemo(() => {
     const alerts = [];
+
+    // Admin-dispatched customer notifications
+    customerNotifs?.filter(n => !n.read).slice(0, 2).forEach(n => {
+      alerts.push({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        message: n.message,
+        icon: n.type === 'alert' ? AlertTriangle : n.type === 'subscription' ? CreditCard : Info,
+        color: n.type === 'alert' ? 'text-rose-300' : n.type === 'subscription' ? 'text-emerald-300' : 'text-cyan-300',
+        bgColor: n.type === 'alert' ? 'bg-rose-950/30' : n.type === 'subscription' ? 'bg-emerald-950/30' : 'bg-cyan-950/30',
+        borderColor: n.type === 'alert' ? 'border-rose-500/25' : n.type === 'subscription' ? 'border-emerald-500/25' : 'border-cyan-500/25',
+        link: '#'
+      });
+    });
 
     // Budget warnings
     if (settings?.budget_alerts_enabled) {
@@ -72,8 +90,8 @@ export default function NotificationsBanner({
         });
     }
 
-    return alerts.slice(0, 3);
-  }, [budgetsWithSpent, goals, settings]);
+    return alerts.slice(0, 4);
+  }, [customerNotifs, budgetsWithSpent, goals, settings]);
 
   if (notifications.length === 0) return null;
 

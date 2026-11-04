@@ -2,7 +2,10 @@ import { format } from "date-fns";
 
 const isBrowser = typeof window !== "undefined";
 
-const getStorageKey = (entityName) => `b44_data_${entityName.toLowerCase()}`;
+const getStorageKey = (entityName) => {
+  const activeTenant = (isBrowser && localStorage.getItem("opus_active_tenant_id")) || "tenant_personal";
+  return `b44_data_${activeTenant}_${entityName.toLowerCase()}`;
+};
 
 // Generate sample dates around current month
 const now = new Date();
@@ -258,6 +261,18 @@ function readItems(entityName) {
   if (raw) {
     try {
       return JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+  }
+  // Check if legacy unpartitioned key exists for backward compatibility
+  const legacyKey = `b44_data_${entityName.toLowerCase()}`;
+  const legacyRaw = localStorage.getItem(legacyKey);
+  if (legacyRaw) {
+    try {
+      const parsed = JSON.parse(legacyRaw);
+      localStorage.setItem(key, legacyRaw);
+      return parsed;
     } catch {
       // ignore
     }

@@ -75,14 +75,33 @@ The codebase has been unarchived, audited, and resolved. All build blockers, mis
     - **AI Assistant & Settings ([`src/pages/Assistant.jsx`](file:///Users/ceooctapus/finance/src/pages/Assistant.jsx) & [`src/pages/Settings.jsx`](file:///Users/ceooctapus/finance/src/pages/Settings.jsx))**:
       - Added floating quick-prompt chips ("Spent $45 on groceries", "Check my budget limits"), glowing WhatsApp send buttons, and dark settings panels.
 
+12. **Multi-Tenant Auth, Demo Test Drive, Email Verification & Admin Portal (2026-11-05)**
+    - **Two Login Options ([`src/pages/Login.jsx`](file:///Users/ceooctapus/finance/src/pages/Login.jsx))**:
+      - **Option 1: Customer Test Drive (`user` / `user`)**:
+        - 1-click "Explore Demo as Customer" button or pre-filled credential inputs to test all features with preloaded transactions and budgets.
+      - **Option 2: Email Sign In & Sign Up with Verification**:
+        - Sign up form with Full Name, Email, Password, and Custom Workspace Name.
+        - Dedicated Email Verification Screen with 6-digit confirmation code input.
+        - "Resend Verification Email" button with live 30-second cooldown timer.
+        - Simulated email dispatch toast + "Auto Fill" testing shortcut.
+    - **Multi-Tenant Architecture ([`src/api/authService.js`](file:///Users/ceooctapus/finance/src/api/authService.js) & [`src/components/tenant/TenantSwitcher.jsx`](file:///Users/ceooctapus/finance/src/components/tenant/TenantSwitcher.jsx))**:
+      - Data partitioning by active tenant key (`b44_data_${activeTenant}_${entity}`).
+      - Topbar and Sidebar workspace switcher dropdown.
+      - Dynamic "+ Create New Workspace" modal to add isolated tenants on the fly.
+    - **Admin Portal ([`src/pages/AdminPortal.jsx`](file:///Users/ceooctapus/finance/src/pages/AdminPortal.jsx))**:
+      - Mounted at `/admin` with dedicated admin auth unlock gate (`admin` / `admin`).
+      - Customer directory with verification status badges, role toggle (Customer ↔ Admin), and account actions.
+      - Subscription Management: Assign plans (Starter Free, Pro, Family Office, Enterprise) and update status (Active, Trial, Past Due, Cancelled).
+      - Customer Notification Center: Dispatch targeted or broadcast announcements that appear directly in customer dashboard banners and header notification bells.
+      - Multi-tenant directory with isolated workspace statistics.
+
 ## Verification & Status
 - `npm run lint`: **Passed (0 errors, 0 warnings)**
 - `npm run typecheck`: **Passed (0 errors)**
-- `npm run build`: **Passed (Vite production bundle built cleanly in ~2.2s)**
+- `npm run build`: **Passed (Vite production bundle built cleanly in ~2.3s)**
 - `npm run dev`: **Running locally on `http://127.0.0.1:5173/`**
 - **WhatsApp Gateway**: Verified live on `https://okay-trunk-donation-loans.trycloudflare.com` and `http://localhost:4000` with active instance `opus_finance`.
 - **AI Gateway**: Verified live on `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` with model `qwen-plus`.
 - **GitHub Repository**: [https://github.com/9sayidnazim-sketch/opus-finance](https://github.com/9sayidnazim-sketch/opus-finance) (branch: `main`)
 - **Live Vercel Production URL**: [https://opus-finance-sigma.vercel.app](https://opus-finance-sigma.vercel.app)
-  - Deployment URL: [https://opus-finance-phmtqso7h-cldoctapustwo.vercel.app](https://opus-finance-phmtqso7h-cldoctapustwo.vercel.app)
-  - Verified HTTP 200 with SPA rewrites for deep paths (`/dashboard`, `/transactions`, `/assistant`, `/budgets`, `/bills`, `/goals`, `/family`, `/settings`).
+  - Verified HTTP 200 with SPA rewrites for all paths (`/`, `/admin`, `/transactions`, `/assistant`, `/budgets`, `/bills`, `/goals`, `/family`, `/settings`).

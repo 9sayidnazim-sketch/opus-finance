@@ -1,147 +1,165 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
-import React, { createContext, useState, useContext, useEffect } from 'react';
-
-import { appParams } from '@/lib/app-params';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { authService, initAuthStore } from '@/api/authService';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTenant, setActiveTenant] = useState(null);
+  const [tenants, setTenants] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
   const [authError, setAuthError] = useState(null);
-  const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
-  useEffect(() => {
-    checkAppState();
+  const refreshState = useCallback(() => {
+    try {
+      initAuthStore();
+      const currentUser = authService.getCurrentUser();
+      const currentTenant = authService.getActiveTenant();
+      const userTenants = authService.getAvailableTenantsForUser(currentUser);
+      
+      setUser(currentUser);
+      setActiveTenant(currentTenant);
+      setTenants(userTenants);
+
+      if (currentUser) {
+        const notifs = authService.getCustomerNotifications(currentUser.email, currentTenant?.id);
+        setNotifications(notifs);
+      } else {
+        setNotifications([]);
+      }
+    } catch (err) {
+      console.error('Failed to load auth state:', err);
+    } finally {
+      setIsLoadingAuth(false);
+    }
   }, []);
 
-  const checkAppState = async () => {
-    try {
-      setIsLoadingPublicSettings(true);
-      setAuthError(null);
-      
-      // If appId or serverUrl are not configured, run in standalone mode with full local persistence
-      if (!appParams.appId || !appParams.serverUrl) {
-        const currentUser = await db.auth.me();
-        setUser(currentUser);
-        setIsAuthenticated(true);
-        setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
-        return;
-      }
+  useEffect(() => {
+    refreshState();
 
-      try {
-        const res = await fetch(`${appParams.serverUrl}/api/apps/public/prod/public-settings/by-id/${appParams.appId}`, {
-          headers: {
-            'X-App-Id': appParams.appId,
-            ...(appParams.token ? { Authorization: `Bearer ${appParams.token}` } : {})
-          }
-        });
+    const handleAuthChanged = () => refreshState();
+    const handleTenantChanged = () => refreshState();
+    const handleNotifChanged = () => refreshState();
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          const reason = errData?.extra_data?.reason;
-          if (res.status === 403 && reason) {
-            if (reason === 'auth_required') {
-              setAuthError({ type: 'auth_required', message: 'Authentication required' });
-            } else if (reason === 'user_not_registered') {
-              setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
-            } else {
-              setAuthError({ type: reason, message: errData?.message || 'Access denied' });
-            }
-          } else {
-            setAuthError({ type: 'unknown', message: errData?.message || 'Failed to load app settings' });
-          }
-          setIsLoadingPublicSettings(false);
-          setIsLoadingAuth(false);
-          return;
-        }
+    window.addEventListener('opus:authChanged', handleAuthChanged);
+    window.addEventListener('opus:tenantChanged', handleTenantChanged);
+    window.addEventListener('opus:notificationDispatched', handleNotifChanged);
 
-        const publicSettings = await res.json();
-        setAppPublicSettings(publicSettings);
-        
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-        }
-        setIsLoadingPublicSettings(false);
-      } catch (appError) {
-        console.error('App state check failed:', appError);
-        setAuthError({
-          type: 'unknown',
-          message: appError.message || 'Failed to load app'
-        });
-        setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      setAuthError({
-        type: 'unknown',
-        message: error.message || 'An unexpected error occurred'
-      });
-      setIsLoadingPublicSettings(false);
-      setIsLoadingAuth(false);
+    return () => {
+      window.removeEventListener('opus:authChanged', handleAuthChanged);
+      window.removeEventListener('opus:tenantChanged', handleTenantChanged);
+      window.removeEventListener('opus:notificationDispatched', handleNotifChanged);
+    };
+  }, [refreshState]);
+
+  // Demo Login: user / user
+  const loginAsDemo = () => {
+    setAuthError(null);
+    const result = authService.loginAsDemo();
+    if (result.success) {
+      refreshState();
     }
+    return result;
   };
 
-  const checkUserAuth = async () => {
-    try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
-      const currentUser = await db.auth.me();
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-    } catch (error) {
-      console.error('User auth check failed:', error);
-      setIsLoadingAuth(false);
-      setIsAuthenticated(false);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
-    }
-  };
-
-  const logout = (shouldRedirect = true) => {
-    setUser(null);
-    setIsAuthenticated(false);
-    
-    if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      db.auth.logout(window.location.href);
+  // Credential Login: user / user, admin / admin, or email
+  const login = (identifier, password) => {
+    setAuthError(null);
+    const result = authService.loginWithCredentials(identifier, password);
+    if (result.success) {
+      refreshState();
     } else {
-      // Just remove the token without redirect
-      db.auth.logout();
+      setAuthError(result.message);
     }
+    return result;
   };
 
-  const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    db.auth.redirectToLogin(window.location.href);
+  // Email Signup
+  const signup = ({ email, password, name, tenantName }) => {
+    setAuthError(null);
+    const result = authService.signupWithEmail({ email, password, name, tenantName });
+    if (!result.success) {
+      setAuthError(result.message);
+    }
+    return result;
   };
+
+  // Verify Email
+  const verifyEmail = ({ email, code }) => {
+    setAuthError(null);
+    const result = authService.verifyEmail({ email, code });
+    if (result.success) {
+      refreshState();
+    } else {
+      setAuthError(result.message);
+    }
+    return result;
+  };
+
+  // Resend Email Verification Code
+  const resendVerification = (email) => {
+    return authService.resendVerificationEmail(email);
+  };
+
+  // Switch Workspace / Tenant
+  const switchTenant = (tenantId) => {
+    const updated = authService.switchTenant(tenantId);
+    if (updated) {
+      setActiveTenant(updated);
+      refreshState();
+      // Reload window or trigger query refresh so all queries pull new tenant storage
+      window.location.reload();
+    }
+    return updated;
+  };
+
+  // Create New Workspace
+  const createTenant = (name, description) => {
+    const created = authService.createTenant(name, description);
+    if (created) {
+      refreshState();
+      window.location.reload();
+    }
+    return created;
+  };
+
+  // Logout
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+    refreshState();
+  };
+
+  const markNotificationAsRead = (id) => {
+    authService.markNotificationAsRead(id);
+    refreshState();
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated, 
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
+      isAdmin,
+      activeTenant,
+      tenants,
+      notifications,
+      unreadCount,
       isLoadingAuth,
-      isLoadingPublicSettings,
       authError,
-      appPublicSettings,
+      loginAsDemo,
+      login,
+      signup,
+      verifyEmail,
+      resendVerification,
+      switchTenant,
+      createTenant,
       logout,
-      navigateToLogin,
-      checkAppState
+      markNotificationAsRead,
+      refreshState
     }}>
       {children}
     </AuthContext.Provider>
