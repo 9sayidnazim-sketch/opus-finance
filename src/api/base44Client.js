@@ -571,10 +571,19 @@ export const db = {
       };
     },
     async addMessage(conversation, message) {
-      const convId = typeof conversation === "string" ? conversation : conversation.id;
+      const convId = typeof conversation === "string" ? conversation : conversation?.id;
       const convs = readConversations();
-      const target = convs.find((c) => c.id === convId);
-      if (!target) return;
+      let target = convs.find((c) => c.id === convId);
+      if (!target) {
+        target = {
+          id: convId || `conv-${Date.now()}`,
+          agent_name: "assistente_financeiro",
+          metadata: { name: `Chat • ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` },
+          created_date: new Date().toISOString(),
+          messages: []
+        };
+        convs.unshift(target);
+      }
 
       const userMsg = {
         ...message,
@@ -584,15 +593,20 @@ export const db = {
       target.messages.push(userMsg);
       writeConversations(convs);
 
+      // Signal thinking started
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opus_ai_thinking_started", { detail: { conversationId: target.id } }));
+      }
+
       // Notify immediate user message
-      const listeners = conversationListeners.get(convId);
+      const listeners = conversationListeners.get(target.id);
       if (listeners) {
         listeners.forEach((cb) => cb({ messages: [...target.messages] }));
       }
 
-      // Dispatch to Live Qwen AI with auto-record in app & fallback
+      // Dispatch to Live AI with auto-record in app & fallback
       setTimeout(async () => {
-        // Calculate live financial context
+        // Calculate live financial context from both local demo and user recorded data
         const transactions = readEntity(ENTITY_KEYS.Transaction);
         let totalBalance = 0;
         let monthlyIncome = 0;
@@ -600,7 +614,7 @@ export const db = {
         const nowMonth = new Date().toISOString().slice(0, 7);
         transactions.forEach((tx) => {
           const amt = Number(tx.amount) || 0;
-          if (tx.type === "income") {
+          if (tx.type === "income" || tx.type === "receita") {
             totalBalance += amt;
             if (tx.date && tx.date.startsWith(nowMonth)) monthlyIncome += amt;
           } else {
@@ -635,6 +649,10 @@ export const db = {
             listeners.forEach((cb) => cb({ messages: [...target.messages] }));
           }
 
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("opus_ai_thinking_finished", { detail: { conversationId: target.id, message: assistantMsg } }));
+          }
+
           if (aiResult.recordedTransaction && typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("opus_transaction_created", { detail: aiResult.recordedTransaction }));
           }
@@ -653,8 +671,12 @@ export const db = {
           if (listeners) {
             listeners.forEach((cb) => cb({ messages: [...target.messages] }));
           }
+
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("opus_ai_thinking_finished", { detail: { conversationId: target.id, message: assistantMsg } }));
+          }
         }
-      }, 200);
+      }, 100);
 
       return userMsg;
     },

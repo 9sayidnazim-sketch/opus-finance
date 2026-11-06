@@ -247,6 +247,92 @@ export function setDatabaseMode(mode) {
   window.dispatchEvent(new CustomEvent("opus_database_mode_changed", { detail: mode }));
 }
 
+// --- AI Proxy & Resilient Gateway Execution ---
+export async function executeAICompletion({ baseUrl, apiKey, model, messages, temperature = 0.7, max_tokens }) {
+  const candidateModels = [model];
+  if (model === "z-ai/glm-5.2") candidateModels.push("z-ai/glm-5.3-flash");
+  if (model === "deepseek-ai/deepseek-v4.1-flash") candidateModels.push("deepseek-ai/deepseek-r1", "deepseek-ai/deepseek-v3");
+
+  let lastError = null;
+
+  for (const currentModel of candidateModels) {
+    // 1. First attempt: call /api/ai proxy (eliminates browser CORS restrictions)
+    try {
+      const proxyRes = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          baseUrl,
+          apiKey,
+          model: currentModel,
+          messages,
+          temperature,
+          ...(max_tokens ? { max_tokens } : {}),
+        }),
+        signal: AbortSignal.timeout(35000),
+      });
+
+      if (proxyRes.ok) {
+        const data = await proxyRes.json();
+        return { data, usedModel: currentModel };
+      }
+
+      const errJson = await proxyRes.json().catch(() => ({}));
+      const errMsg = errJson.error || errJson.detail || `Proxy HTTP ${proxyRes.status}`;
+
+      if (proxyRes.status === 404 || errMsg.toLowerCase().includes("not found") || errMsg.toLowerCase().includes("decommissioned")) {
+        lastError = new Error(errMsg);
+        continue;
+      }
+
+      // If proxy route itself is missing (404 without JSON error), break to direct fetch
+      if (proxyRes.status === 404 && !errJson.error) {
+        throw new Error("Proxy route not available");
+      }
+
+      throw new Error(errMsg);
+    } catch (proxyErr) {
+      // 2. Direct fetch fallback (for local custom setups or CORS-friendly proxies)
+      try {
+        const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
+        const directRes = await fetch(`${cleanBaseUrl}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: currentModel,
+            messages,
+            temperature,
+            ...(max_tokens ? { max_tokens } : {}),
+          }),
+          signal: AbortSignal.timeout(25000),
+        });
+
+        if (directRes.ok) {
+          const data = await directRes.json();
+          return { data, usedModel: currentModel };
+        }
+
+        const errJson = await directRes.json().catch(() => ({}));
+        const errMsg = errJson.detail || errJson.message || `AI API HTTP ${directRes.status}`;
+
+        if (directRes.status === 404 || errMsg.toLowerCase().includes("not found")) {
+          lastError = new Error(errMsg);
+          continue;
+        }
+
+        throw new Error(errMsg);
+      } catch (directErr) {
+        lastError = directErr;
+      }
+    }
+  }
+
+  throw lastError || new Error("Failed to communicate with AI gateway");
+}
+
 // --- Test AI Connection for Any Provider ---
 export async function testAIConnection(providerKey) {
   const cfg = getAIConfig();
@@ -260,32 +346,23 @@ export async function testAIConnection(providerKey) {
 
   const start = performance.now();
   try {
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "user", content: "Ping" }],
-        max_tokens: 20,
-      }),
-      signal: AbortSignal.timeout(12000),
+    const { data, usedModel } = await executeAICompletion({
+      baseUrl,
+      apiKey,
+      model,
+      messages: [{ role: "user", content: "Ping" }],
+      max_tokens: 15,
+      temperature: 0.1,
     });
 
     const latencyMs = Math.round(performance.now() - start);
-
-    if (res.ok) {
-      return { ok: true, status: res.status, latencyMs, model, provider: pMeta.name };
-    }
-    const errData = await res.json().catch(() => ({}));
     return { 
-      ok: false, 
-      status: res.status, 
-      error: errData.detail || errData.message || `HTTP ${res.status}`, 
-      model,
-      provider: pMeta.name 
+      ok: true, 
+      status: 200, 
+      latencyMs, 
+      model: usedModel || model, 
+      provider: pMeta.name,
+      sampleResponse: data.choices?.[0]?.message?.content || "Connected"
     };
   } catch (err) {
     return { ok: false, error: err.message, model, provider: pMeta.name };
@@ -364,26 +441,14 @@ Tone & Rules:
   ];
 
   try {
-    const res = await fetch(`${activeDetails.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${activeDetails.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: activeDetails.model,
-        messages: apiMessages,
-        temperature: 0.7,
-      }),
-      signal: AbortSignal.timeout(25000),
+    const { data, usedModel } = await executeAICompletion({
+      baseUrl: activeDetails.baseUrl,
+      apiKey: activeDetails.apiKey,
+      model: activeDetails.model,
+      messages: apiMessages,
+      temperature: 0.7,
     });
 
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      throw new Error(errJson.detail || errJson.message || `AI engine error (${res.status}) on ${activeDetails.name}`);
-    }
-
-    const data = await res.json();
     const messageObj = data.choices?.[0]?.message;
     const rawReply = messageObj?.content || messageObj?.reasoning_content || "I couldn't process that right now.";
 
@@ -470,7 +535,7 @@ Tone & Rules:
       tool_calls: toolCalls,
       recordedTransaction,
       provider: activeDetails.name,
-      model: activeDetails.model,
+      model: usedModel || activeDetails.model,
       databaseMode: dbMode,
       memoryScope
     };

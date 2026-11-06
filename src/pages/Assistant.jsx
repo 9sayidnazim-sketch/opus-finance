@@ -65,6 +65,7 @@ export default function AssistantPage() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState([]);
+  const [isThinking, setIsThinking] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -108,6 +109,26 @@ export default function AssistantPage() {
       setMessages(selectedConversation.messages || []);
     }
   }, [selectedConversation]);
+
+  useEffect(() => {
+    const onStart = () => setIsThinking(true);
+    const onFinish = () => setIsThinking(false);
+    window.addEventListener("opus_ai_thinking_started", onStart);
+    window.addEventListener("opus_ai_thinking_finished", onFinish);
+    return () => {
+      window.removeEventListener("opus_ai_thinking_started", onStart);
+      window.removeEventListener("opus_ai_thinking_finished", onFinish);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const last = messages[messages.length - 1];
+      if (last.role === "assistant") {
+        setIsThinking(false);
+      }
+    }
+  }, [messages]);
 
   useEffect(() => {
     const handleTxCreated = (e) => {
@@ -200,14 +221,44 @@ export default function AssistantPage() {
 
   const handleSendMessage = async (textToSend) => {
     const content = (textToSend || messageInput).trim();
-    if (!content || !selectedConversation) return;
+    if (!content) return;
 
     setMessageInput("");
 
-    await db.agents.addMessage(selectedConversation, {
-      role: "user",
-      content,
-    });
+    let targetConv = selectedConversation;
+    if (!targetConv) {
+      if (conversations && conversations.length > 0) {
+        targetConv = conversations[0];
+        setSelectedConversation(targetConv);
+      } else {
+        try {
+          targetConv = await db.agents.createConversation({
+            agent_name: "assistente_financeiro",
+            metadata: {
+              name: `Chat • ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+            }
+          });
+          setSelectedConversation(targetConv);
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        } catch (err) {
+          console.error("Failed to auto-create conversation:", err);
+          targetConv = { id: `conv-${Date.now()}`, metadata: { name: "Active Chat" } };
+          setSelectedConversation(targetConv);
+        }
+      }
+    }
+
+    setIsThinking(true);
+
+    try {
+      await db.agents.addMessage(targetConv, {
+        role: "user",
+        content,
+      });
+    } catch (err) {
+      setIsThinking(false);
+      toast.error(`Message error: ${err.message}`);
+    }
   };
 
   const handleAudioRecorded = async (audioFile) => {
@@ -476,6 +527,28 @@ export default function AssistantPage() {
                   <MessageBubble key={message.id || index} message={message} />
                 ))
               )}
+
+              {isThinking && (
+                <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/[0.04] border border-violet-500/25 backdrop-blur-md animate-pulse">
+                  <div className="w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0">
+                    <Sparkles className="w-4 h-4 animate-spin text-violet-300" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-violet-300">{activeDetails.badge} is reasoning...</span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400">
+                      Evaluating finances ({dbMode} DB, {memScope} memory) with {activeDetails.model}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
@@ -490,8 +563,9 @@ export default function AssistantPage() {
               >
                 <div className="relative flex-1">
                   <Input
-                    placeholder={`Tell ${activeDetails.badge} about an expense, budget check, or rule...`}
+                    placeholder={isThinking ? `Formulating financial analysis with ${activeDetails.badge}...` : `Tell ${activeDetails.badge} about an expense, budget check, or rule...`}
                     value={messageInput}
+                    disabled={isThinking}
                     onChange={(e) => setMessageInput(e.target.value)}
                     className="bg-white/[0.03] border-white/[0.08] focus:border-violet-500 text-white rounded-xl pr-10 text-xs sm:text-sm h-11"
                   />
@@ -502,10 +576,10 @@ export default function AssistantPage() {
 
                 <Button
                   type="submit"
-                  disabled={!messageInput.trim()}
+                  disabled={!messageInput.trim() || isThinking}
                   className="bg-violet-600 hover:bg-violet-500 text-white rounded-xl h-11 px-4 shadow-[0_0_20px_-4px_rgba(139,92,246,0.6)] disabled:opacity-40"
                 >
-                  <Send className="w-4 h-4" />
+                  {isThinking ? <Sparkles className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
               </form>
             </div>
