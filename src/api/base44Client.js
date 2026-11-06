@@ -3,6 +3,10 @@ import { format } from "date-fns";
 const isBrowser = typeof window !== "undefined";
 
 const getStorageKey = (entityName) => {
+  const dbMode = (isBrowser && localStorage.getItem("opus_database_mode")) || "separate";
+  if (dbMode === "single") {
+    return `b44_data_single_${entityName.toLowerCase()}`;
+  }
   const activeTenant = (isBrowser && localStorage.getItem("opus_active_tenant_id")) || "tenant_personal";
   return `b44_data_${activeTenant}_${entityName.toLowerCase()}`;
 };
@@ -277,6 +281,18 @@ function readItems(entityName) {
       // ignore
     }
   }
+  // Check personal tenant records if in single database mode
+  const personalKey = `b44_data_tenant_personal_${entityName.toLowerCase()}`;
+  const personalRaw = localStorage.getItem(personalKey);
+  if (personalRaw) {
+    try {
+      const parsed = JSON.parse(personalRaw);
+      localStorage.setItem(key, personalRaw);
+      return parsed;
+    } catch {
+      // ignore
+    }
+  }
   const defaults = defaultInitialData[entityName.toLowerCase()] || [];
   localStorage.setItem(key, JSON.stringify(defaults));
   return defaults;
@@ -393,12 +409,33 @@ const entitiesProxy = new Proxy(
 // Agent conversations support
 const conversationListeners = new Map();
 
+function getConversationStorageKey() {
+  const memoryScope = (isBrowser && localStorage.getItem("opus_ai_memory_scope")) || "separate";
+  if (memoryScope === "single") {
+    return "b44_conversations_single";
+  }
+  const activeTenant = (isBrowser && localStorage.getItem("opus_active_tenant_id")) || "tenant_personal";
+  return `b44_conversations_${activeTenant}`;
+}
+
 function readConversations() {
   if (!isBrowser) return [];
-  const raw = localStorage.getItem("b44_conversations");
+  const key = getConversationStorageKey();
+  const raw = localStorage.getItem(key);
   if (raw) {
     try {
       return JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+  }
+  // Fallback to legacy b44_conversations
+  const legacyRaw = localStorage.getItem("b44_conversations");
+  if (legacyRaw) {
+    try {
+      const parsed = JSON.parse(legacyRaw);
+      localStorage.setItem(key, legacyRaw);
+      return parsed;
     } catch {
       // ignore
     }
@@ -412,19 +449,20 @@ function readConversations() {
       messages: [
         {
           role: "assistant",
-          content: "Hello Alex! I am your OPUS personal finance assistant. I can help you record expenses, check budget limits, forecast bill due dates, or analyze your savings progress. How can I assist your finances today?",
+          content: "Hello! I am OPUS AI, your multi-model financial copilot. How can I assist with your expenses, budgets, or savings goals today?",
           created_date: new Date().toISOString()
         }
       ]
     }
   ];
-  localStorage.setItem("b44_conversations", JSON.stringify(defaultConv));
+  localStorage.setItem(key, JSON.stringify(defaultConv));
   return defaultConv;
 }
 
 function writeConversations(convs) {
   if (!isBrowser) return;
-  localStorage.setItem("b44_conversations", JSON.stringify(convs));
+  const key = getConversationStorageKey();
+  localStorage.setItem(key, JSON.stringify(convs));
 }
 
 function generateAssistantReply(userText) {

@@ -7,6 +7,7 @@ import {
   Plus, 
   Layers
 } from 'lucide-react';
+import { getDatabaseMode, setDatabaseMode } from '@/api/aiClient';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,7 @@ export default function TenantSwitcher({ className = "" }) {
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [newWorkspaceDesc, setNewWorkspaceDesc] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dbMode, setDbMode] = useState(getDatabaseMode());
 
   const handleSelectTenant = (tenantId) => {
     if (tenantId === activeTenant?.id) return;
@@ -127,6 +129,45 @@ export default function TenantSwitcher({ className = "" }) {
                 </DropdownMenuItem>
               );
             })}
+          </div>
+
+          <DropdownMenuSeparator className="bg-white/[0.08]" />
+
+          <DropdownMenuLabel className="text-[10px] text-zinc-400 px-2 py-0.5 uppercase tracking-wider font-semibold flex items-center justify-between">
+            <span>Database Mode</span>
+            <span className="text-[9px] text-cyan-400 font-mono">{dbMode === 'single' ? 'Single' : 'Separate'}</span>
+          </DropdownMenuLabel>
+          <div className="grid grid-cols-2 gap-1 p-1 mb-1">
+            <button
+              type="button"
+              onClick={() => {
+                setDatabaseMode("separate");
+                setDbMode("separate");
+                window.location.reload();
+              }}
+              className={`text-[10px] py-1 px-1.5 rounded-lg font-medium border text-center transition-all ${
+                dbMode === "separate"
+                  ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
+                  : "bg-white/[0.03] text-zinc-400 border-transparent hover:text-white"
+              }`}
+            >
+              Separate DB
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDatabaseMode("single");
+                setDbMode("single");
+                window.location.reload();
+              }}
+              className={`text-[10px] py-1 px-1.5 rounded-lg font-medium border text-center transition-all ${
+                dbMode === "single"
+                  ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
+                  : "bg-white/[0.03] text-zinc-400 border-transparent hover:text-white"
+              }`}
+            >
+              Single DB
+            </button>
           </div>
 
           <DropdownMenuSeparator className="bg-white/[0.08]" />

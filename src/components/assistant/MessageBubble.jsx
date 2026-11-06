@@ -68,6 +68,25 @@ const FunctionDisplay = ({ toolCall }) => {
             </div>
         );
     }
+
+    // Special highlight for memory updates
+    if (name === "update_financial_memory" && parsedResults?.fact) {
+        return (
+            <div className="mt-2.5 p-3 rounded-xl border border-indigo-500/30 bg-indigo-950/30 text-xs shadow-[0_0_20px_-8px_rgba(99,102,241,0.3)] backdrop-blur-xl">
+                <div className="flex items-center gap-1.5 font-semibold text-indigo-300 mb-1">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Saved to AI Financial Memory</span>
+                </div>
+                <p className="text-[11px] text-zinc-200">
+                    "{parsedResults.fact}"
+                </p>
+                <div className="mt-1 pt-1 border-t border-indigo-500/15 flex items-center justify-between text-[10px] text-zinc-400">
+                    <span>Scope: <strong className="text-indigo-300 uppercase">{parsedResults.memoryScope || "workspace"}</strong></span>
+                    <span className="text-emerald-400">● Active</span>
+                </div>
+            </div>
+        );
+    }
     
     const statusConfig = {
         pending: { icon: Clock, color: 'text-zinc-400', text: 'Pending' },

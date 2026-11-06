@@ -95,13 +95,32 @@ The codebase has been unarchived, audited, and resolved. All build blockers, mis
       - Customer Notification Center: Dispatch targeted or broadcast announcements that appear directly in customer dashboard banners and header notification bells.
       - Multi-tenant directory with isolated workspace statistics.
 
+13. **Multi-Model AI Engine, Separate vs Single Database & Memory Architecture (2026-11-06)**
+    - **Multi-Model AI Providers ([`src/api/aiClient.js`](file:///Users/ceooctapus/finance/src/api/aiClient.js))**:
+      - **Z-AI GLM on NVIDIA NIM**: Added `z-ai/glm-5.3-flash` (active verified successor) and `z-ai/glm-5.2` with key `nvapi-zkUIH4ax...`.
+      - **DeepSeek on NVIDIA NIM**: Added `deepseek-ai/deepseek-v4.1-flash` and `deepseek-chat` with key `nvapi-RdYkIQeU...`.
+      - **Alibaba DashScope (Qwen)**: `qwen-plus`, `qwen-turbo`, `qwen-max`.
+      - **Custom OpenAI-compatible**: Any private proxy or cloud LLM.
+      - 1-click model switcher pill in AI Assistant header and latency connection tester in Settings.
+    - **Database Architecture: Separate vs Single Database ([`src/api/base44Client.js`](file:///Users/ceooctapus/finance/src/api/base44Client.js))**:
+      - **Separate Database Mode**: Strict workspace partitioning (`b44_data_${activeTenant}_${entity}`).
+      - **Single Database Mode**: Unified cross-tenant global ledger (`b44_data_single_${entity}`).
+      - Visual toggle and mode indicator in Settings and Workspace Switcher.
+    - **AI Memory Architecture: Separate vs Single Memory ([`src/api/aiClient.js`](file:///Users/ceooctapus/finance/src/api/aiClient.js) & [`src/pages/Assistant.jsx`](file:///Users/ceooctapus/finance/src/pages/Assistant.jsx))**:
+      - **Separate Memory**: Workspace-scoped financial rules and preferences (`opus_ai_memory_${activeTenant}`).
+      - **Single Memory**: Global persistent memory across all workspaces (`opus_ai_memory_single`).
+      - Interactive Memory Bank modal in chat and settings to teach, inspect, and reset financial rules injected into the prompt.
+
 ## Verification & Status
 - `npm run lint`: **Passed (0 errors, 0 warnings)**
 - `npm run typecheck`: **Passed (0 errors)**
 - `npm run build`: **Passed (Vite production bundle built cleanly in ~2.3s)**
 - `npm run dev`: **Running locally on `http://127.0.0.1:5173/`**
+- **AI Gateways**:
+  - Z-AI GLM 5.3 Flash: Verified live on `https://integrate.api.nvidia.com/v1` (HTTP 200).
+  - DeepSeek: Verified live on `https://integrate.api.nvidia.com/v1`.
+  - Qwen-Plus: Verified live on `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`.
 - **WhatsApp Gateway**: Verified live on `https://okay-trunk-donation-loans.trycloudflare.com` and `http://localhost:4000` with active instance `opus_finance`.
-- **AI Gateway**: Verified live on `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` with model `qwen-plus`.
 - **GitHub Repository**: [https://github.com/9sayidnazim-sketch/opus-finance](https://github.com/9sayidnazim-sketch/opus-finance) (branch: `main`)
 - **Live Vercel Production URL**: [https://opus-finance-sigma.vercel.app](https://opus-finance-sigma.vercel.app)
   - Verified HTTP 200 with SPA rewrites for all paths (`/`, `/admin`, `/transactions`, `/assistant`, `/budgets`, `/bills`, `/goals`, `/family`, `/settings`).
