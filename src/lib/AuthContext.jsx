@@ -1,5 +1,10 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { authService, initAuthStore } from '@/api/authService';
+import { 
+  sendPhoneVerificationCode, 
+  verifyPhoneSecurityCode, 
+  resendPhoneVerificationCode 
+} from '@/api/phoneVerifyService';
 
 const AuthContext = createContext();
 
@@ -102,6 +107,33 @@ export const AuthProvider = ({ children }) => {
     return authService.resendVerificationEmail(email);
   };
 
+  // --- Phone OTP Authentication (django-phone-verify pattern) ---
+  const sendPhoneCode = async (phoneNumber) => {
+    setAuthError(null);
+    return await sendPhoneVerificationCode({ phoneNumber });
+  };
+
+  const verifyPhoneCode = async ({ phoneNumber, securityCode }) => {
+    setAuthError(null);
+    return await verifyPhoneSecurityCode({ phoneNumber, securityCode });
+  };
+
+  const resendPhoneCode = async (phoneNumber) => {
+    setAuthError(null);
+    return await resendPhoneVerificationCode({ phoneNumber });
+  };
+
+  const loginWithPhone = ({ phoneNumber, sessionToken, name, workspaceName }) => {
+    setAuthError(null);
+    const result = authService.authenticateWithPhone({ phoneNumber, sessionToken, name, workspaceName });
+    if (result.success) {
+      refreshState();
+    } else {
+      setAuthError(result.message);
+    }
+    return result;
+  };
+
   // Switch Workspace / Tenant
   const switchTenant = (tenantId) => {
     const updated = authService.switchTenant(tenantId);
@@ -155,6 +187,10 @@ export const AuthProvider = ({ children }) => {
       signup,
       verifyEmail,
       resendVerification,
+      sendPhoneCode,
+      verifyPhoneCode,
+      resendPhoneCode,
+      loginWithPhone,
       switchTenant,
       createTenant,
       logout,

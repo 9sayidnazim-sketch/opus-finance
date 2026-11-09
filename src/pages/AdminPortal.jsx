@@ -18,7 +18,8 @@ import {
   Crown,
   KeyRound,
   Lock,
-  ArrowRight
+  ArrowRight,
+  Phone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,6 +88,7 @@ export default function AdminPortal() {
       return (
         (u.name && u.name.toLowerCase().includes(q)) ||
         (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.phoneNumber && u.phoneNumber.toLowerCase().includes(q)) ||
         (u.username && u.username.toLowerCase().includes(q)) ||
         (u.role && u.role.toLowerCase().includes(q))
       );
@@ -96,6 +98,7 @@ export default function AdminPortal() {
   // Executive metrics
   const totalUsers = users.length;
   const verifiedUsers = users.filter(u => u.emailVerified).length;
+  const phoneVerifiedUsers = users.filter(u => u.phoneVerified).length;
   const activeSubs = users.filter(u => u.subscriptionStatus === 'active').length;
   const totalTenantsCount = tenants.length;
 
@@ -322,8 +325,8 @@ export default function AdminPortal() {
             <Users className="w-4 h-4 text-violet-400" />
           </div>
           <div className="text-2xl font-bold text-white tabular-numbers">{totalUsers}</div>
-          <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> {verifiedUsers} email verified
+          <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1.5 flex-wrap">
+            <Phone className="w-3 h-3 text-cyan-400" /> {phoneVerifiedUsers} phone • {verifiedUsers} email
           </p>
         </div>
 
@@ -439,7 +442,7 @@ export default function AdminPortal() {
                 <thead className="bg-white/[0.03] border-b border-white/[0.06] text-zinc-400 font-medium">
                   <tr>
                     <th className="p-3.5 pl-4">Customer</th>
-                    <th className="p-3.5">Email & Verification</th>
+                    <th className="p-3.5">Contact & Verification</th>
                     <th className="p-3.5">Workspace</th>
                     <th className="p-3.5">Role</th>
                     <th className="p-3.5">Subscription</th>
@@ -462,25 +465,35 @@ export default function AdminPortal() {
                       </td>
 
                       <td className="p-3.5">
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           <p className="text-zinc-200 font-mono text-[11px]">{u.email}</p>
-                          {u.emailVerified ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
-                              <CheckCircle2 className="w-3 h-3" /> Verified
-                            </span>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/25">
-                                <Clock className="w-3 h-3" /> Pending
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {u.emailVerified ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+                                <CheckCircle2 className="w-2.5 h-2.5" /> Email
                               </span>
-                              <button
-                                onClick={() => handleManualResendVerification(u.email)}
-                                className="text-[10px] text-violet-400 hover:text-violet-300 underline"
-                              >
-                                Dispatch Code
-                              </button>
-                            </div>
-                          )}
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/25">
+                                  <Clock className="w-2.5 h-2.5" /> Unverified
+                                </span>
+                                <button
+                                  onClick={() => handleManualResendVerification(u.email)}
+                                  className="text-[10px] text-violet-400 hover:text-violet-300 underline"
+                                >
+                                  Code
+                                </button>
+                              </div>
+                            )}
+
+                            {u.phoneNumber ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/25 font-mono">
+                                <Phone className="w-2.5 h-2.5" /> {u.phoneNumber} {u.phoneVerified ? '✓' : ''}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-zinc-500 italic">No phone</span>
+                            )}
+                          </div>
                         </div>
                       </td>
 

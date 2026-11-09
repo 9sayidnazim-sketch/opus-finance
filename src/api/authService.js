@@ -56,6 +56,8 @@ const defaultUsers = [
     username: 'user',
     name: 'Demo Customer',
     email: 'user@opusfinance.app',
+    phoneNumber: '+15550192834',
+    phoneVerified: true,
     password: 'user',
     role: 'customer',
     tenantId: 'tenant_demo',
@@ -72,6 +74,8 @@ const defaultUsers = [
     username: 'admin',
     name: 'System Administrator',
     email: 'admin@opusfinance.app',
+    phoneNumber: '+15550198888',
+    phoneVerified: true,
     password: 'admin',
     role: 'admin',
     tenantId: 'tenant_primary',
@@ -88,6 +92,8 @@ const defaultUsers = [
     username: 'alex',
     name: 'Alex Silva',
     email: 'alex@opusfinance.app',
+    phoneNumber: '+15550196543',
+    phoneVerified: true,
     password: 'password123',
     role: 'customer',
     tenantId: 'tenant_personal',
@@ -429,7 +435,77 @@ export const authService = {
     };
   },
 
-  // 6. Sign Out
+  // 6. Phone OTP Login / Registration
+  authenticateWithPhone({ phoneNumber, sessionToken, name, workspaceName }) {
+    initAuthStore();
+    const users = this.getAllUsers();
+    const cleanPhone = (phoneNumber || '').replace(/[^\d+]/g, '').trim();
+
+    if (!cleanPhone) {
+      return { success: false, message: 'Valid phone number is required.' };
+    }
+
+    // Check for existing user by phone number
+    let user = users.find(u => u.phoneNumber && u.phoneNumber.replace(/[^\d+]/g, '') === cleanPhone);
+
+    if (user) {
+      // Mark phoneVerified if not already
+      let updatedUser = { ...user, phoneVerified: true };
+      const updatedUsers = users.map(u => u.id === user.id ? updatedUser : u);
+      writeStorage(STORAGE_KEYS.USERS, updatedUsers);
+
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_USER_ID, updatedUser.id);
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_TENANT_ID, updatedUser.tenantId || 'tenant_personal');
+      window.dispatchEvent(new CustomEvent('opus:authChanged', { detail: updatedUser }));
+      return { success: true, user: updatedUser, isNewUser: false };
+    }
+
+    // New user registration via verified phone number
+    const tenantId = `tenant_${Date.now()}`;
+    const userDisplayName = name?.trim() || `User ${cleanPhone.slice(-4)}`;
+    const initialWorkspace = workspaceName?.trim() || `${userDisplayName.split(' ')[0]}'s Workspace`;
+
+    const newTenant = {
+      id: tenantId,
+      name: initialWorkspace,
+      slug: initialWorkspace.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+      plan: 'Starter Free',
+      planStatus: 'trial',
+      ownerPhone: cleanPhone,
+      ownerEmail: `${cleanPhone.replace(/\+/g, '')}@opusfinance.app`,
+      createdAt: new Date().toISOString(),
+      description: 'Customer workspace'
+    };
+
+    const tenants = this.getAllTenants();
+    writeStorage(STORAGE_KEYS.TENANTS, [...tenants, newTenant]);
+
+    const newUser = {
+      id: `usr_${Date.now()}`,
+      username: `phone_${cleanPhone.replace(/\D/g, '').slice(-8)}`,
+      name: userDisplayName,
+      email: `${cleanPhone.replace(/\+/g, '')}@opusfinance.app`,
+      phoneNumber: cleanPhone,
+      phoneVerified: true,
+      emailVerified: true,
+      role: 'customer',
+      tenantId,
+      allowedTenants: [tenantId],
+      subscriptionTier: 'Starter Free',
+      subscriptionStatus: 'trial',
+      avatar: '📱',
+      createdAt: new Date().toISOString()
+    };
+
+    writeStorage(STORAGE_KEYS.USERS, [...users, newUser]);
+
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_USER_ID, newUser.id);
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_TENANT_ID, tenantId);
+    window.dispatchEvent(new CustomEvent('opus:authChanged', { detail: newUser }));
+    return { success: true, user: newUser, isNewUser: true };
+  },
+
+  // 7. Sign Out
   logout() {
     if (!isBrowser) return;
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER_ID);
